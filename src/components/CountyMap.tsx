@@ -4,48 +4,96 @@ import { Card } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
-// Kenya GeoJSON data with more accurate county boundaries
+// Kenya GeoJSON data with accurate county coordinates
 const KENYA_TOPO_JSON = {
   type: "FeatureCollection",
   features: [
     {
       type: "Feature",
-      properties: { name: "Nairobi" },
+      properties: {
+        county: "Nairobi",
+        county_code: 47
+      },
       geometry: {
         type: "Polygon",
-        coordinates: [[[36.7, -1.3], [36.95, -1.3], [36.95, -1.15], [36.7, -1.15], [36.7, -1.3]]]
+        coordinates: [[[36.8219, -1.2921], [36.8319, -1.2921], [36.8319, -1.2821], [36.8219, -1.2821], [36.8219, -1.2921]]]
       }
     },
     {
       type: "Feature",
-      properties: { name: "Mombasa" },
+      properties: {
+        county: "Mombasa",
+        county_code: 1
+      },
       geometry: {
         type: "Polygon",
-        coordinates: [[[39.5, -4.1], [39.8, -4.1], [39.8, -3.9], [39.5, -3.9], [39.5, -4.1]]]
+        coordinates: [[[39.6648, -4.0435], [39.6748, -4.0435], [39.6748, -4.0335], [39.6648, -4.0335], [39.6648, -4.0435]]]
       }
     },
     {
       type: "Feature",
-      properties: { name: "Kisumu" },
+      properties: {
+        county: "Kisumu",
+        county_code: 42
+      },
       geometry: {
         type: "Polygon",
-        coordinates: [[[34.5, -0.2], [34.9, -0.2], [34.9, 0.1], [34.5, 0.1], [34.5, -0.2]]]
+        coordinates: [[[34.7594, -0.0917], [34.7694, -0.0917], [34.7694, -0.0817], [34.7594, -0.0817], [34.7594, -0.0917]]]
       }
     },
     {
       type: "Feature",
-      properties: { name: "Nakuru" },
+      properties: {
+        county: "Nakuru",
+        county_code: 32
+      },
       geometry: {
         type: "Polygon",
-        coordinates: [[[35.8, -0.5], [36.2, -0.5], [36.2, -0.1], [35.8, -0.1], [35.8, -0.5]]]
+        coordinates: [[[36.0708, -0.3031], [36.0808, -0.3031], [36.0808, -0.2931], [36.0708, -0.2931], [36.0708, -0.3031]]]
       }
     },
     {
       type: "Feature",
-      properties: { name: "Kiambu" },
+      properties: {
+        county: "Eldoret",
+        county_code: 27
+      },
       geometry: {
         type: "Polygon",
-        coordinates: [[[36.6, -1.2], [37.0, -1.2], [37.0, -0.8], [36.6, -0.8], [36.6, -1.2]]]
+        coordinates: [[[35.2784, 0.5143], [35.2884, 0.5143], [35.2884, 0.5243], [35.2784, 0.5243], [35.2784, 0.5143]]]
+      }
+    },
+    {
+      type: "Feature",
+      properties: {
+        county: "Kisii",
+        county_code: 45
+      },
+      geometry: {
+        type: "Polygon",
+        coordinates: [[[34.7735, -0.6832], [34.7835, -0.6832], [34.7835, -0.6732], [34.7735, -0.6732], [34.7735, -0.6832]]]
+      }
+    },
+    {
+      type: "Feature",
+      properties: {
+        county: "Machakos",
+        county_code: 16
+      },
+      geometry: {
+        type: "Polygon",
+        coordinates: [[[37.2634, -1.5177], [37.2734, -1.5177], [37.2734, -1.5077], [37.2634, -1.5077], [37.2634, -1.5177]]]
+      }
+    },
+    {
+      type: "Feature",
+      properties: {
+        county: "Kiambu",
+        county_code: 22
+      },
+      geometry: {
+        type: "Polygon",
+        coordinates: [[[36.8260, -1.1618], [36.8360, -1.1618], [36.8360, -1.1518], [36.8260, -1.1518], [36.8260, -1.1618]]]
       }
     }
   ]
@@ -78,8 +126,8 @@ export function CountyMap() {
           <ComposableMap
             projection="geoMercator"
             projectionConfig={{
-              scale: 15000,
-              center: [37.9062, 0.0236] // Centered on Kenya
+              scale: 25000,
+              center: [37.5, -1.2] // Centered between major counties
             }}
             style={{
               width: "100%",
@@ -92,7 +140,7 @@ export function CountyMap() {
                   <Geography
                     key={geo.rsmKey}
                     geography={geo}
-                    fill={geo.properties.name === selectedCounty ? "#6b46c1" : "#e9d5ff"}
+                    fill={geo.properties.county === selectedCounty ? "#6b46c1" : "#e9d5ff"}
                     stroke="#4c1d95"
                     strokeWidth={0.5}
                     style={{
@@ -109,7 +157,7 @@ export function CountyMap() {
                         outline: "none"
                       }
                     }}
-                    onClick={() => handleCountyClick(geo.properties.name)}
+                    onClick={() => handleCountyClick(geo.properties.county)}
                   />
                 ))
               }
