@@ -5,15 +5,13 @@ import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { kenyaCountiesGeoJSON } from "@/data/kenya-counties";
 import debounce from 'lodash/debounce';
+import { colors } from '../lib/colors';
 
-// Set Mapbox access token
-mapboxgl.accessToken = 'pk.eyJ1IjoiZGV2cmF5ayIsImEiOiJjbTNzenU3azAwM2pxMmxzNXptdGZkbmRnIn0.Vve0ErWPY7nM4bIrn1bD_g';
+// Disable worker pool extension to prevent errors
+// @ts-ignore
+delete mapboxgl.workerPool;
 
-// Configure Mapbox
-mapboxgl.clearStorage();
-
-// Disable WebGL warning
-mapboxgl.prewarm();
+const MAPBOX_TOKEN = 'pk.eyJ1IjoiZGV2cmF5ayIsImEiOiJjbTNzenU3azAwM2pxMmxzNXptdGZkbmRnIn0.Vve0ErWPY7nM4bIrn1bD_g';
 
 // Kenyan flag colors
 const colors = {
@@ -41,7 +39,7 @@ const MAP_OPTIONS = {
     if (resourceType === 'Source' && url.startsWith('mapbox://')) {
       return {
         url: url.replace('mapbox://', 'https://api.mapbox.com/'),
-        headers: { 'Authorization': `Bearer ${mapboxgl.accessToken}` }
+        headers: { 'Authorization': `Bearer ${MAPBOX_TOKEN}` }
       };
     }
     return { url };
@@ -66,7 +64,7 @@ export function CountyMap() {
   const debouncedNavigate = useCallback(
     debounce((countyName: string) => {
       navigate(`/bills?county=${encodeURIComponent(countyName)}`);
-    }, 300),
+    }, 150),
     [navigate]
   );
 
@@ -153,42 +151,34 @@ export function CountyMap() {
   }, []);
 
   useEffect(() => {
-    let mounted = true;
-    let frameId: number;
-
-    if (!mapContainer.current) {
-      setMapError("Map container not found");
-      return cleanup;
-    }
+    if (!mapContainer.current) return;
 
     try {
-      if (!mapboxgl.accessToken) {
-        throw new Error("Mapbox token not found");
-      }
-
-      if (map.current) return cleanup;
-
-      // Create map instance with optimized options
-      const mapInstance = new mapboxgl.Map({
+      // Initialize map with WebGL optimizations
+      mapboxgl.accessToken = MAPBOX_TOKEN;
+      map.current = new mapboxgl.Map({
         container: mapContainer.current,
         ...MAP_OPTIONS,
         center: [initialViewState.lng, initialViewState.lat],
         zoom: initialViewState.zoom,
-        optimizeForTerrain: false,
-        preserveDrawingBuffer: false,
-        trackResize: true,
-        maxParallelImageRequests: 6,
-        localIdeographFontFamily: "'Noto Sans', sans-serif"
+        preserveDrawingBuffer: false, // Improve performance
+        antialias: false, // Disable antialiasing for better performance
+        maxPitch: 0, // Disable 3D perspective for better performance
+        renderWorldCopies: false, // Disable world copies for better performance
       });
 
-      map.current = mapInstance;
+      // Add error handling for map load
+      map.current.on('error', (e) => {
+        console.error('Map error:', e);
+        // Attempt recovery by resetting the map style
+        if (map.current) {
+          map.current.setStyle('mapbox://styles/mapbox/light-v11');
+        }
+      });
 
-      // Handle map load with optimized marker creation
-      mapInstance.once('load', () => {
-        if (!mounted) return;
-
-        try {
-          // Batch marker creation
+      // Initialize markers only after map is loaded
+      map.current.on('load', () => {
+        requestAnimationFrame(() => {
           const fragment = document.createDocumentFragment();
           const newMarkers: mapboxgl.Marker[] = [];
 
@@ -219,51 +209,24 @@ export function CountyMap() {
           });
 
           // Batch add markers to map
-          frameId = requestAnimationFrame(() => {
-            newMarkers.forEach(marker => marker.addTo(mapInstance));
-            markers.current = newMarkers;
-          });
-
-          // Add navigation control with optimized options
-          mapInstance.addControl(
-            new mapboxgl.NavigationControl({
-              showCompass: true,
-              showZoom: true,
-              visualizePitch: false
-            }),
-            'top-right'
-          );
-
-        } catch (error) {
-          console.error("Error adding map features:", error);
-          if (mounted) {
-            setMapError("Error adding map features");
-          }
-        }
+          newMarkers.forEach(marker => marker.addTo(map.current));
+          markers.current = newMarkers;
+        });
       });
 
-      // Optimized error handling
-      mapInstance.on('error', (e) => {
-        console.error("Mapbox error:", e);
-        if (mounted) {
-          setMapError("Map error occurred");
-        }
+      // Add navigation controls with performance optimizations
+      const nav = new mapboxgl.NavigationControl({
+        showCompass: false, // Disable compass for better performance
+        showZoom: true,
+        visualizePitch: false
       });
+      map.current.addControl(nav, 'top-right');
 
     } catch (error) {
-      console.error("Error initializing map:", error);
-      if (mounted) {
-        setMapError("Error initializing map");
-      }
+      console.error('Error initializing map:', error);
     }
 
-    return () => {
-      mounted = false;
-      if (frameId) {
-        cancelAnimationFrame(frameId);
-      }
-      cleanup();
-    };
+    return cleanup;
   }, [initialViewState.lng, initialViewState.lat, initialViewState.zoom, cleanup, createMarkerElement]);
 
   return (
