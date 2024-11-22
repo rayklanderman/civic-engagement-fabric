@@ -1,5 +1,5 @@
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
+import maplibregl from 'maplibre-gl';
+import 'maplibre-gl/dist/maplibre-gl.css';
 import { useEffect, useRef, useCallback, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import debounce from 'lodash/debounce';
@@ -14,19 +14,29 @@ const isWebGLSupported = () => {
   return !!(window.WebGLRenderingContext && (canvas.getContext('webgl') || canvas.getContext('experimental-webgl')));
 };
 
-// Get Mapbox token from environment variable
-const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
-
-if (!MAPBOX_TOKEN) {
-  throw new Error('Mapbox token is required. Please check your environment variables.');
-}
-
-// Set access token globally
-mapboxgl.accessToken = MAPBOX_TOKEN;
-
 // Memoized map options
 const MAP_OPTIONS = {
-  style: 'mapbox://styles/mapbox/light-v11',
+  style: {
+    version: 8,
+    sources: {
+      'osm': {
+        type: 'raster',
+        tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+        tileSize: 256,
+        attribution: '&copy; OpenStreetMap Contributors',
+        maxzoom: 19
+      }
+    },
+    layers: [
+      {
+        id: 'osm',
+        type: 'raster',
+        source: 'osm',
+        minzoom: 0,
+        maxzoom: 19
+      }
+    ]
+  },
   center: [37.9062, 0.0236],
   zoom: 5.5,
   preserveDrawingBuffer: false,
@@ -50,8 +60,8 @@ const MAP_OPTIONS = {
 
 export const CountyMap = () => {
   const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<mapboxgl.Map | null>(null);
-  const markers = useRef<mapboxgl.Marker[]>([]);
+  const map = useRef<maplibregl.Map | null>(null);
+  const markers = useRef<maplibregl.Marker[]>([]);
   const [selectedCounty, setSelectedCounty] = useState<string>('');
   const [mapError, setMapError] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -150,15 +160,7 @@ export const CountyMap = () => {
 
     const initMap = async () => {
       try {
-        // Wait for style to load before initializing map
-        await new Promise<void>((resolve) => {
-          const img = new Image();
-          img.onload = () => resolve();
-          img.onerror = () => resolve();
-          img.src = 'https://api.mapbox.com/styles/v1/mapbox/light-v11/sprite@2x.png';
-        });
-
-        const mapInstance = new mapboxgl.Map({
+        const mapInstance = new maplibregl.Map({
           container: mapContainer.current!,
           ...MAP_OPTIONS
         });
@@ -171,16 +173,32 @@ export const CountyMap = () => {
 
         map.current = mapInstance;
 
+        // Add counties layer
+        mapInstance.addSource('counties', {
+          type: 'geojson',
+          data: kenyaCountiesGeoJSON
+        });
+
+        mapInstance.addLayer({
+          id: 'county-fills',
+          type: 'fill',
+          source: 'counties',
+          paint: {
+            'fill-color': 'rgba(200, 100, 240, 0.1)',
+            'fill-outline-color': colors.black
+          }
+        });
+
         // Add markers
         const fragment = document.createDocumentFragment();
-        const newMarkers: mapboxgl.Marker[] = [];
+        const newMarkers: maplibregl.Marker[] = [];
 
         kenyaCountiesGeoJSON.features.forEach((county) => {
           const coordinates = county.geometry.coordinates;
           const name = county.properties.name;
           const el = createMarkerElement(name);
 
-          const marker = new mapboxgl.Marker({
+          const marker = new maplibregl.Marker({
             element: el,
             anchor: 'center'
           })
@@ -197,7 +215,7 @@ export const CountyMap = () => {
         });
 
         // Add minimal controls
-        const nav = new mapboxgl.NavigationControl({
+        const nav = new maplibregl.NavigationControl({
           showCompass: false,
           showZoom: true,
           visualizePitch: false
