@@ -7,6 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
+import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
 
 interface Bill {
   id: string;
@@ -15,30 +17,6 @@ interface Bill {
   county: string;
   deadline: string;
 }
-
-const SAMPLE_BILLS: Bill[] = [
-  {
-    id: "1",
-    title: "County Finance Bill 2024",
-    description: "Proposed financial allocations for the fiscal year 2024/2025",
-    county: "Nairobi",
-    deadline: "2024-03-30",
-  },
-  {
-    id: "2",
-    title: "Healthcare Services Bill",
-    description: "Regulations for private and public healthcare facilities",
-    county: "Mombasa",
-    deadline: "2024-04-15",
-  },
-  {
-    id: "3",
-    title: "Environmental Conservation Bill",
-    description: "Regulations for environmental protection and conservation",
-    county: "Kisumu",
-    deadline: "2024-05-01",
-  },
-];
 
 interface ParticipationFormData {
   name: string;
@@ -60,13 +38,20 @@ export function BillsList() {
   });
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
+  const { data: bills = [], isLoading } = useQuery({
+    queryKey: ['bills'],
+    queryFn: async () => {
+      const response = await axios.get('http://localhost:5000/api/bills');
+      return response.data;
+    },
+  });
+
   const filteredBills = selectedCounty
-    ? SAMPLE_BILLS.filter((bill) => bill.county === selectedCounty)
-    : SAMPLE_BILLS;
+    ? bills.filter((bill: Bill) => bill.county === selectedCounty)
+    : bills;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Here you would typically send the data to your backend
     console.log("Submission data:", { billId: selectedBill?.id, ...formData });
     toast({
       title: "Feedback Submitted",
@@ -86,6 +71,10 @@ export function BillsList() {
     setIsDialogOpen(true);
   };
 
+  if (isLoading) {
+    return <div className="p-4">Loading bills...</div>;
+  }
+
   return (
     <div className="space-y-4">
       <h2 className="text-2xl font-semibold">
@@ -96,7 +85,7 @@ export function BillsList() {
           <p className="text-gray-500">No bills found for this county.</p>
         </Card>
       ) : (
-        filteredBills.map((bill) => (
+        filteredBills.map((bill: Bill) => (
           <Card key={bill.id} className="p-6">
             <div className="flex justify-between items-start">
               <div>
