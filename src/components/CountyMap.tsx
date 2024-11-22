@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { ComposableMap, Geographies, Geography } from "react-simple-maps";
-import { Card } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -16,7 +15,7 @@ const KENYA_TOPO_JSON = {
       },
       geometry: {
         type: "Polygon",
-        coordinates: [[[36.8219, -1.2921], [36.8319, -1.2921], [36.8319, -1.2821], [36.8219, -1.2821], [36.8219, -1.2921]]]
+        coordinates: [[[36.8219, -1.2921], [36.9219, -1.2921], [36.9219, -1.1921], [36.8219, -1.1921], [36.8219, -1.2921]]]
       }
     },
     {
@@ -27,7 +26,7 @@ const KENYA_TOPO_JSON = {
       },
       geometry: {
         type: "Polygon",
-        coordinates: [[[39.6648, -4.0435], [39.6748, -4.0435], [39.6748, -4.0335], [39.6648, -4.0335], [39.6648, -4.0435]]]
+        coordinates: [[[39.6648, -4.0435], [39.7648, -4.0435], [39.7648, -3.9435], [39.6648, -3.9435], [39.6648, -4.0435]]]
       }
     },
     {
@@ -38,7 +37,7 @@ const KENYA_TOPO_JSON = {
       },
       geometry: {
         type: "Polygon",
-        coordinates: [[[34.7594, -0.0917], [34.7694, -0.0917], [34.7694, -0.0817], [34.7594, -0.0817], [34.7594, -0.0917]]]
+        coordinates: [[[34.7594, -0.0917], [34.8594, -0.0917], [34.8594, 0.0083], [34.7594, 0.0083], [34.7594, -0.0917]]]
       }
     },
     {
@@ -49,7 +48,7 @@ const KENYA_TOPO_JSON = {
       },
       geometry: {
         type: "Polygon",
-        coordinates: [[[36.0708, -0.3031], [36.0808, -0.3031], [36.0808, -0.2931], [36.0708, -0.2931], [36.0708, -0.3031]]]
+        coordinates: [[[36.0708, -0.3031], [36.1708, -0.3031], [36.1708, -0.2031], [36.0708, -0.2031], [36.0708, -0.3031]]]
       }
     },
     {
@@ -60,7 +59,7 @@ const KENYA_TOPO_JSON = {
       },
       geometry: {
         type: "Polygon",
-        coordinates: [[[35.2784, 0.5143], [35.2884, 0.5143], [35.2884, 0.5243], [35.2784, 0.5243], [35.2784, 0.5143]]]
+        coordinates: [[[35.2784, 0.5143], [35.3784, 0.5143], [35.3784, 0.6143], [35.2784, 0.6143], [35.2784, 0.5143]]]
       }
     },
     {
@@ -71,7 +70,7 @@ const KENYA_TOPO_JSON = {
       },
       geometry: {
         type: "Polygon",
-        coordinates: [[[34.7735, -0.6832], [34.7835, -0.6832], [34.7835, -0.6732], [34.7735, -0.6732], [34.7735, -0.6832]]]
+        coordinates: [[[34.7735, -0.6832], [34.8735, -0.6832], [34.8735, -0.5832], [34.7735, -0.5832], [34.7735, -0.6832]]]
       }
     },
     {
@@ -82,7 +81,7 @@ const KENYA_TOPO_JSON = {
       },
       geometry: {
         type: "Polygon",
-        coordinates: [[[37.2634, -1.5177], [37.2734, -1.5177], [37.2734, -1.5077], [37.2634, -1.5077], [37.2634, -1.5177]]]
+        coordinates: [[[37.2634, -1.5177], [37.3634, -1.5177], [37.3634, -1.4177], [37.2634, -1.4177], [37.2634, -1.5177]]]
       }
     },
     {
@@ -93,7 +92,7 @@ const KENYA_TOPO_JSON = {
       },
       geometry: {
         type: "Polygon",
-        coordinates: [[[36.8260, -1.1618], [36.8360, -1.1618], [36.8360, -1.1518], [36.8260, -1.1518], [36.8260, -1.1618]]]
+        coordinates: [[[36.8260, -1.1618], [36.9260, -1.1618], [36.9260, -1.0618], [36.8260, -1.0618], [36.8260, -1.1618]]]
       }
     }
   ]
@@ -126,8 +125,8 @@ export function CountyMap() {
           <ComposableMap
             projection="geoMercator"
             projectionConfig={{
-              scale: 25000,
-              center: [37.5, -1.2] // Centered between major counties
+              scale: 8000,
+              center: [37, -1] // Centered on Kenya
             }}
             style={{
               width: "100%",
@@ -142,7 +141,7 @@ export function CountyMap() {
                     geography={geo}
                     fill={geo.properties.county === selectedCounty ? "#6b46c1" : "#e9d5ff"}
                     stroke="#4c1d95"
-                    strokeWidth={0.5}
+                    strokeWidth={1}
                     style={{
                       default: {
                         outline: "none",
