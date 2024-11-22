@@ -75,20 +75,17 @@
     @apply bg-background text-foreground;
   }
 
-  /* Button Optimizations */
+  /* Button Base Styles */
   button {
-    touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
-    contain: layout style paint;
-    will-change: transform;
-    transform: translateZ(0);
-    backface-visibility: hidden;
+    user-select: none;
   }
 
-  /* Reduced Motion */
+  /* Remove transitions for users who prefer reduced motion */
   @media (prefers-reduced-motion: reduce) {
-    button {
+    * {
       transition: none !important;
+      animation: none !important;
     }
   }
 
