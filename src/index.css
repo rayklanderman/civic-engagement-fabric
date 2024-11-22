@@ -96,3 +96,30 @@
     perspective: 1000px;
   }
 }
+
+/* Mapbox Styles */
+.county-marker {
+  transition: transform 0.2s ease, background-color 0.2s ease;
+  transform-origin: center;
+}
+
+.county-popup {
+  background-color: white;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.mapboxgl-popup-content {
+  padding: 0 !important;
+  border-radius: 4px !important;
+}
+
+.mapboxgl-ctrl-group {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+.mapboxgl-ctrl button {
+  width: 30px !important;
+  height: 30px !important;
+}

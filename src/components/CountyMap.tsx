@@ -6,7 +6,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import { kenyaCountiesGeoJSON } from "@/data/kenya-counties";
 import debounce from 'lodash/debounce';
 
-// Replace this with your Mapbox access token
+// Set Mapbox access token
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN || '';
 
 // Kenyan flag colors
@@ -22,21 +22,23 @@ const MAP_OPTIONS = {
   minZoom: 5,
   maxZoom: 9,
   renderWorldCopies: false,
-  attributionControl: false,
+  attributionControl: true,
   preserveDrawingBuffer: true,
   antialias: true,
-  failIfMajorPerformanceCaveat: false
+  failIfMajorPerformanceCaveat: true,
+  maxBounds: [
+    [32.913597, -4.720556], // Southwest coordinates
+    [41.899397, 5.506] // Northeast coordinates
+  ]
 } as const;
 
 export function CountyMap() {
   const [selectedCounty, setSelectedCounty] = useState("");
   const [mapError, setMapError] = useState<string | null>(null);
-  const [isWebGLSupported, setIsWebGLSupported] = useState(true);
   const navigate = useNavigate();
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const markers = useRef<mapboxgl.Marker[]>([]);
-  const markersLayer = useRef<mapboxgl.GeoJSONSource | null>(null);
   
   const initialViewState = useMemo(() => ({
     lng: 37.9062,
@@ -44,28 +46,16 @@ export function CountyMap() {
     zoom: 5.5
   }), []);
 
-  // Debounced navigation function with increased delay
+  // Debounced navigation function
   const debouncedNavigate = useCallback(
     debounce((countyName: string) => {
-      requestAnimationFrame(() => {
-        navigate(`/bills?county=${encodeURIComponent(countyName)}`);
-      });
-    }, 500),
+      navigate(`/bills?county=${encodeURIComponent(countyName)}`);
+    }, 300),
     [navigate]
   );
 
-  // Check WebGL support
-  useEffect(() => {
-    const canvas = document.createElement('canvas');
-    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-    setIsWebGLSupported(!!gl);
-  }, []);
-
   // Cleanup function
   const cleanup = useCallback(() => {
-    if (markersLayer.current) {
-      markersLayer.current = null;
-    }
     markers.current.forEach(marker => marker.remove());
     markers.current = [];
     if (map.current) {
@@ -74,45 +64,41 @@ export function CountyMap() {
     }
   }, []);
 
-  // Create marker element with optimized rendering
+  // Create marker element
   const createMarkerElement = useCallback((name: string) => {
     const el = document.createElement('div');
     el.className = 'county-marker';
     
-    // Use transform instead of width/height for better performance
     Object.assign(el.style, {
-      transform: 'translate(-50%, -50%) scale(1)',
-      width: '15px',
-      height: '15px',
+      width: '12px',
+      height: '12px',
       backgroundColor: colors.red,
       border: `2px solid ${colors.black}`,
       borderRadius: '50%',
-      cursor: 'pointer',
-      willChange: 'transform, background-color',
-      contain: 'layout style paint',
-      position: 'relative'
+      cursor: 'pointer'
     });
 
-    const handleInteraction = (isHover: boolean) => {
-      requestAnimationFrame(() => {
-        el.style.backgroundColor = isHover ? colors.green : colors.red;
-        el.style.transform = `translate(-50%, -50%) scale(${isHover ? 1.2 : 1})`;
-      });
-    };
+    el.addEventListener('mouseenter', () => {
+      el.style.backgroundColor = colors.green;
+      el.style.transform = 'scale(1.2)';
+    });
 
-    el.addEventListener('mouseenter', () => handleInteraction(true), { passive: true });
-    el.addEventListener('mouseleave', () => handleInteraction(false), { passive: true });
+    el.addEventListener('mouseleave', () => {
+      el.style.backgroundColor = colors.red;
+      el.style.transform = 'scale(1)';
+    });
+
     el.addEventListener('click', () => {
       setSelectedCounty(name);
       debouncedNavigate(name);
-    }, { passive: true });
+    });
 
     return el;
   }, [debouncedNavigate]);
 
   useEffect(() => {
-    if (!mapContainer.current || !isWebGLSupported) {
-      setMapError(isWebGLSupported ? "Map container not found" : "WebGL not supported");
+    if (!mapContainer.current) {
+      setMapError("Map container not found");
       return cleanup;
     }
 
@@ -132,63 +118,37 @@ export function CountyMap() {
 
       const mapInstance = map.current;
 
-      // Use worker pool for better performance
-      if (mapInstance.painter && mapInstance.painter.context) {
-        mapInstance.painter.context.extendWorkerPool(4);
-      }
-
       mapInstance.on('load', () => {
         try {
-          // Batch marker creation
-          const fragment = document.createDocumentFragment();
-          const markersToAdd: mapboxgl.Marker[] = [];
-
+          // Add markers
           kenyaCountiesGeoJSON.features.forEach((county) => {
             const coordinates = county.geometry.coordinates;
             const name = county.properties.name;
             const el = createMarkerElement(name);
-            fragment.appendChild(el);
 
             const marker = new mapboxgl.Marker(el)
               .setLngLat(coordinates)
               .setPopup(
                 new mapboxgl.Popup({ 
-                  offset: 25, 
+                  offset: 15,
                   closeButton: false,
                   className: 'county-popup'
                 })
-                .setHTML(`<h3 style="color: ${colors.black}; margin: 0;">${name}</h3>`)
+                .setHTML(`<h3 style="color: ${colors.black}; margin: 0; padding: 8px;">${name}</h3>`)
               );
 
-            markersToAdd.push(marker);
+            marker.addTo(mapInstance);
+            markers.current.push(marker);
           });
 
-          // Batch add markers
-          requestAnimationFrame(() => {
-            markersToAdd.forEach(marker => marker.addTo(mapInstance));
-            markers.current = markersToAdd;
-          });
-
-          // Add navigation control with optimized styling
-          const nav = new mapboxgl.NavigationControl({
-            showCompass: true,
-            showZoom: true,
-            visualizePitch: true
-          });
-
-          mapInstance.addControl(nav, 'top-right');
-
-          // Style navigation control
-          requestAnimationFrame(() => {
-            const navContainer = document.querySelector('.mapboxgl-ctrl-group');
-            if (navContainer) {
-              Object.assign((navContainer as HTMLElement).style, {
-                border: `2px solid ${colors.black}`,
-                backgroundColor: colors.white,
-                contain: 'layout style paint'
-              });
-            }
-          });
+          // Add navigation control
+          mapInstance.addControl(
+            new mapboxgl.NavigationControl({
+              showCompass: true,
+              showZoom: true
+            }),
+            'top-right'
+          );
 
         } catch (error) {
           console.error("Error adding map features:", error);
@@ -207,7 +167,7 @@ export function CountyMap() {
     }
 
     return cleanup;
-  }, [initialViewState.lng, initialViewState.lat, initialViewState.zoom, cleanup, createMarkerElement, isWebGLSupported]);
+  }, [initialViewState.lng, initialViewState.lat, initialViewState.zoom, cleanup, createMarkerElement]);
 
   return (
     <Card className="w-full h-[600px] relative">
@@ -216,7 +176,7 @@ export function CountyMap() {
           <p className="text-red-600">{mapError}</p>
         </div>
       )}
-      <div ref={mapContainer} className="w-full h-full" style={{ contain: 'layout paint style' }} />
+      <div ref={mapContainer} className="w-full h-full" />
     </Card>
   );
 }
