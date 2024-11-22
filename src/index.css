@@ -74,4 +74,28 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Button Optimizations */
+  button {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    contain: layout style paint;
+    will-change: transform;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+  }
+
+  /* Reduced Motion */
+  @media (prefers-reduced-motion: reduce) {
+    button {
+      transition: none !important;
+    }
+  }
+
+  /* High Performance Animations */
+  .transform-gpu {
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
+    perspective: 1000px;
+  }
 }
