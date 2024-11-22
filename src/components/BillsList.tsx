@@ -1,6 +1,12 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useSearchParams } from "react-router-dom";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { useState } from "react";
+import { useToast } from "@/components/ui/use-toast";
 
 interface Bill {
   id: string;
@@ -34,13 +40,51 @@ const SAMPLE_BILLS: Bill[] = [
   },
 ];
 
+interface ParticipationFormData {
+  name: string;
+  email: string;
+  phoneNumber: string;
+  comment: string;
+}
+
 export function BillsList() {
   const [searchParams] = useSearchParams();
   const selectedCounty = searchParams.get("county");
+  const { toast } = useToast();
+  const [selectedBill, setSelectedBill] = useState<Bill | null>(null);
+  const [formData, setFormData] = useState<ParticipationFormData>({
+    name: "",
+    email: "",
+    phoneNumber: "",
+    comment: "",
+  });
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const filteredBills = selectedCounty
     ? SAMPLE_BILLS.filter((bill) => bill.county === selectedCounty)
     : SAMPLE_BILLS;
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Here you would typically send the data to your backend
+    console.log("Submission data:", { billId: selectedBill?.id, ...formData });
+    toast({
+      title: "Feedback Submitted",
+      description: "Thank you for participating in the bill review process.",
+    });
+    setIsDialogOpen(false);
+    setFormData({
+      name: "",
+      email: "",
+      phoneNumber: "",
+      comment: "",
+    });
+  };
+
+  const handleParticipateClick = (bill: Bill) => {
+    setSelectedBill(bill);
+    setIsDialogOpen(true);
+  };
 
   return (
     <div className="space-y-4">
@@ -63,7 +107,64 @@ export function BillsList() {
                   <span>Deadline: {bill.deadline}</span>
                 </div>
               </div>
-              <Button>Participate</Button>
+              <Dialog open={isDialogOpen && selectedBill?.id === bill.id} onOpenChange={(open) => {
+                setIsDialogOpen(open);
+                if (!open) setSelectedBill(null);
+              }}>
+                <DialogTrigger asChild>
+                  <Button onClick={() => handleParticipateClick(bill)}>Participate</Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[500px]">
+                  <DialogHeader>
+                    <DialogTitle>Participate in Bill Review</DialogTitle>
+                  </DialogHeader>
+                  <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="name">Full Name *</Label>
+                      <Input
+                        id="name"
+                        required
+                        value={formData.name}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        placeholder="Enter your full name"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email Address *</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        required
+                        value={formData.email}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        placeholder="Enter your email address"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="phone">Phone Number *</Label>
+                      <Input
+                        id="phone"
+                        required
+                        value={formData.phoneNumber}
+                        onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+                        placeholder="Enter your phone number"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="comment">Your Comments *</Label>
+                      <Textarea
+                        id="comment"
+                        required
+                        value={formData.comment}
+                        onChange={(e) => setFormData({ ...formData, comment: e.target.value })}
+                        placeholder="Share your thoughts on this bill"
+                        className="min-h-[100px]"
+                      />
+                    </div>
+                    <Button type="submit" className="w-full">Submit Feedback</Button>
+                  </form>
+                </DialogContent>
+              </Dialog>
             </div>
           </Card>
         ))
