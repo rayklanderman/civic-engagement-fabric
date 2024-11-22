@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
-// Kenya GeoJSON data
+// Kenya GeoJSON data with more accurate county boundaries
 const KENYA_TOPO_JSON = {
   type: "FeatureCollection",
   features: [
@@ -13,7 +13,7 @@ const KENYA_TOPO_JSON = {
       properties: { name: "Nairobi" },
       geometry: {
         type: "Polygon",
-        coordinates: [[[36.7, -1.3], [36.9, -1.3], [36.9, -1.4], [36.7, -1.4], [36.7, -1.3]]]
+        coordinates: [[[36.7, -1.3], [36.95, -1.3], [36.95, -1.15], [36.7, -1.15], [36.7, -1.3]]]
       }
     },
     {
@@ -21,7 +21,7 @@ const KENYA_TOPO_JSON = {
       properties: { name: "Mombasa" },
       geometry: {
         type: "Polygon",
-        coordinates: [[[39.6, -4.0], [39.7, -4.0], [39.7, -4.1], [39.6, -4.1], [39.6, -4.0]]]
+        coordinates: [[[39.5, -4.1], [39.8, -4.1], [39.8, -3.9], [39.5, -3.9], [39.5, -4.1]]]
       }
     },
     {
@@ -29,7 +29,23 @@ const KENYA_TOPO_JSON = {
       properties: { name: "Kisumu" },
       geometry: {
         type: "Polygon",
-        coordinates: [[[34.7, -0.1], [34.9, -0.1], [34.9, -0.2], [34.7, -0.2], [34.7, -0.1]]]
+        coordinates: [[[34.5, -0.2], [34.9, -0.2], [34.9, 0.1], [34.5, 0.1], [34.5, -0.2]]]
+      }
+    },
+    {
+      type: "Feature",
+      properties: { name: "Nakuru" },
+      geometry: {
+        type: "Polygon",
+        coordinates: [[[35.8, -0.5], [36.2, -0.5], [36.2, -0.1], [35.8, -0.1], [35.8, -0.5]]]
+      }
+    },
+    {
+      type: "Feature",
+      properties: { name: "Kiambu" },
+      geometry: {
+        type: "Polygon",
+        coordinates: [[[36.6, -1.2], [37.0, -1.2], [37.0, -0.8], [36.6, -0.8], [36.6, -1.2]]]
       }
     }
   ]
@@ -62,8 +78,8 @@ export function CountyMap() {
           <ComposableMap
             projection="geoMercator"
             projectionConfig={{
-              scale: 2500,
-              center: [37.9062, 0.0236]
+              scale: 6000,
+              center: [37.9062, -0.0236]
             }}
           >
             <Geographies geography={KENYA_TOPO_JSON}>
