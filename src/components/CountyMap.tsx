@@ -6,7 +6,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import { kenyaCountiesGeoJSON } from "@/data/kenya-counties";
 
 // Replace this with your Mapbox access token
-mapboxgl.accessToken = 'sk.eyJ1IjoiZGV2cmF5ayIsImEiOiJjbTNzenl3a3MwM21rMmpzOTh1ZGU5dnpiIn0.t-FcrbhipBe7E_vNHeljSQ';
+mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || 'sk.eyJ1IjoiZGV2cmF5ayIsImEiOiJjbTNzenl3a3MwM21rMmpzOTh1ZGU5dnpiIn0.t-FcrbhipBe7E_vNHeljSQ';
 
 const COUNTIES = [
   "Mombasa", "Kwale", "Kilifi", "Tana River", "Lamu", "Taita Taveta", "Garissa", 
