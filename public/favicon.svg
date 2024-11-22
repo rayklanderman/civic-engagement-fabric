@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle with black border -->
+  <circle cx="16" cy="16" r="15" fill="white" stroke="black" stroke-width="2"/>
+  
+  <!-- Kenyan flag colors in concentric circles -->
+  <circle cx="16" cy="16" r="12" fill="#BE0027"/>
+  <circle cx="16" cy="16" r="8" fill="#000000"/>
+  <circle cx="16" cy="16" r="4" fill="#007A3D"/>
+  
+  <!-- Text "SYW" (Sauti ya Wananchi) -->
+  <text x="16" y="17" text-anchor="middle" font-family="Arial" font-size="6" fill="white" font-weight="bold">SYW</text>
+</svg>
