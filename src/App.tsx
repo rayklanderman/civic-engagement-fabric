@@ -7,7 +7,7 @@ import { routes } from './routes';
 
 const queryClient = new QueryClient();
 
-// Configure React Router with future flags
+// Enable future flags
 const router = createBrowserRouter(routes, {
   future: {
     v7_startTransition: true,
@@ -15,14 +15,14 @@ const router = createBrowserRouter(routes, {
   }
 });
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <RouterProvider router={router} />
-    </TooltipProvider>
-  </QueryClientProvider>
-);
-
-export default App;
+export default function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <RouterProvider router={router} />
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+}

@@ -15,37 +15,29 @@ const MAP_RENDER_OPTIONS = {
   useWebGL2: true,
   failIfMajorPerformanceCaveat: false,
   performanceMetrics: true,
-  optimizeForTerrain: false,
-  maxParallelImageRequests: 16,
   localIdeographFontFamily: "'Noto Sans', sans-serif",
-  crossSourceCollisions: false
-} as const;
-
-// Check for WebGL support with performance considerations
-const checkWebGLSupport = () => {
-  const canvas = document.createElement('canvas');
-  let gl = null;
-  
-  try {
-    gl = canvas.getContext('webgl2') || 
-         canvas.getContext('webgl') || 
-         canvas.getContext('experimental-webgl');
-  } catch (e) {
-    return false;
-  }
-  
-  if (!gl) return false;
-  
-  // Check for minimum requirements
-  const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
-  if (debugInfo) {
-    const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
-    if (renderer.toLowerCase().includes('swiftshader')) {
-      console.warn('Software rendering detected. Performance may be degraded.');
+  crossSourceCollisions: false,
+  trackResize: false,
+  renderingMode: '2d' as const,
+  projection: 'mercator' as const,
+  cooperativeGestures: true,
+  maxParallelImageRequests: 16,
+  refreshExpiredTiles: false,
+  attributionControl: false,
+  transformRequest: (url: string, resourceType: string) => {
+    if (resourceType === 'Tile') {
+      return {
+        url,
+        headers: {
+          'Accept': 'image/webp,*/*',
+          'Accept-Encoding': 'gzip, deflate, br',
+          'Cache-Control': 'max-age=3600'
+        },
+        credentials: 'omit'
+      };
     }
+    return { url };
   }
-  
-  return true;
 };
 
 // Memoized map options
@@ -91,21 +83,134 @@ const MAP_OPTIONS = {
   }
 } as const;
 
+// Memoized marker options
+const MARKER_OPTIONS = {
+  draggable: false,
+  rotation: 0,
+  rotationAlignment: 'viewport',
+  pitchAlignment: 'viewport',
+  offset: [0, 0]
+} as const;
+
+// Pre-render marker images
+const createOffscreenMarker = (color: string) => {
+  const size = 16;
+  const canvas = document.createElement('canvas');
+  canvas.width = size * 2;
+  canvas.height = size * 2;
+  
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return null;
+  
+  ctx.scale(2, 2);
+  ctx.beginPath();
+  ctx.arc(size/2, size/2, size/2 - 1, 0, Math.PI * 2);
+  ctx.fillStyle = color;
+  ctx.fill();
+  ctx.strokeStyle = colors.black;
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  
+  return canvas;
+};
+
+const markerImages = {
+  default: createOffscreenMarker(colors.primary),
+  hover: createOffscreenMarker(colors.primary.replace('rgb', 'rgba').replace(')', ', 0.7)')),
+  selected: createOffscreenMarker(colors.secondary)
+};
+
 export const CountyMap = () => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
   const markers = useRef<maplibregl.Marker[]>([]);
-  const [selectedCounty, setSelectedCounty] = useState<string>('');
+  const [selectedCounty, setSelectedCounty] = useState<string | null>(null);
   const [mapError, setMapError] = useState<string | null>(null);
+  const [webGLInfo, setWebGLInfo] = useState<any>(null);
   const navigate = useNavigate();
+  const markerRefs = useRef<Map<string, HTMLElement>>(new Map());
+  const searchParams = new URLSearchParams(window.location.search);
+  const countyParam = searchParams.get('county');
+
+  // Enhanced WebGL support check with proper fallback
+  const checkWebGLSupport = () => {
+    const canvas = document.createElement('canvas');
+    let gl = null;
+    let isWebGL2 = false;
+    
+    try {
+      // Try WebGL2 first
+      gl = canvas.getContext('webgl2');
+      if (gl) {
+        isWebGL2 = true;
+      } else {
+        // Fallback to WebGL1
+        gl = canvas.getContext('webgl', {
+          failIfMajorPerformanceCaveat: false,
+          powerPreference: 'default',
+          preserveDrawingBuffer: true,
+          antialias: true
+        }) || canvas.getContext('experimental-webgl');
+      }
+    } catch (e) {
+      console.warn('WebGL initialization failed:', e);
+      return false;
+    }
+    
+    if (!gl) {
+      console.warn('WebGL not available');
+      return false;
+    }
+    
+    // Check for software rendering
+    const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+    if (debugInfo) {
+      const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+      const vendor = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL);
+      
+      console.info('WebGL Renderer:', renderer);
+      console.info('WebGL Vendor:', vendor);
+      
+      if (renderer.toLowerCase().includes('swiftshader') || 
+          renderer.toLowerCase().includes('software') ||
+          renderer.toLowerCase().includes('llvmpipe')) {
+        console.warn('Software rendering detected - performance may be degraded');
+      }
+    }
+
+    // Check for required extensions
+    const requiredExtensions = ['OES_element_index_uint', 'OES_vertex_array_object'];
+    const missingExtensions = requiredExtensions.filter(ext => !gl.getExtension(ext));
+    
+    if (missingExtensions.length > 0) {
+      console.warn('Missing required WebGL extensions:', missingExtensions);
+      return false;
+    }
+
+    return {
+      isWebGL2,
+      hasHardwareAcceleration: !renderer?.toLowerCase().includes('software'),
+      maxTextureSize: gl.getParameter(gl.MAX_TEXTURE_SIZE),
+      maxViewportDims: gl.getParameter(gl.MAX_VIEWPORT_DIMS)
+    };
+  };
 
   // Check WebGL support on mount
   useLayoutEffect(() => {
-    if (!checkWebGLSupport()) {
+    const glSupport = checkWebGLSupport();
+    if (!glSupport) {
       setMapError('WebGL is not supported or has been disabled. Please check your browser settings.');
       return;
     }
+    setWebGLInfo(glSupport);
   }, []);
+
+  // Update selected county from URL
+  useEffect(() => {
+    if (countyParam) {
+      setSelectedCounty(decodeURIComponent(countyParam));
+    }
+  }, [countyParam]);
 
   // Optimized navigation handler with React 18 transitions
   const debouncedNavigate = useMemo(
@@ -117,69 +222,88 @@ export const CountyMap = () => {
     [navigate]
   );
 
-  // Optimized marker element creator
+  // Create marker element with proper event handling
   const createMarkerElement = useCallback((name: string) => {
     const el = document.createElement('div');
     el.className = 'county-marker';
     
-    // Use GPU-accelerated properties
-    el.style.cssText = `
-      width: 12px;
-      height: 12px;
-      background-color: ${colors.red};
-      border: 2px solid ${colors.black};
-      border-radius: 50%;
-      cursor: pointer;
-      contain: strict;
-      will-change: transform;
-      transform: translate3d(0, 0, 0);
-      transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s ease-out;
-      backface-visibility: hidden;
-      -webkit-font-smoothing: antialiased;
-    `;
+    // Use pre-rendered images
+    if (markerImages.default) {
+      el.style.cssText = `
+        width: 32px;
+        height: 32px;
+        background-image: url(${markerImages.default.toDataURL()});
+        background-size: contain;
+        cursor: pointer;
+        contain: strict;
+        will-change: transform;
+        transform: translate3d(0, 0, 0) scale(${name === selectedCounty ? 1.2 : 1});
+        backface-visibility: hidden;
+        -webkit-font-smoothing: antialiased;
+        pointer-events: auto;
+        transition: transform 0.2s ease-out;
+      `;
+    }
 
-    const handleInteraction = (e: Event) => {
+    // Store reference for quick access
+    markerRefs.current.set(name, el);
+
+    // Optimized event handling
+    const handleHover = (e: Event) => {
       const target = e.currentTarget as HTMLElement;
-      
-      switch(e.type) {
-        case 'mouseenter':
-          requestAnimationFrame(() => {
-            target.style.backgroundColor = colors.green;
-            target.style.transform = 'translate3d(0, 0, 0) scale(1.2)';
-          });
-          break;
-          
-        case 'mouseleave':
-          requestAnimationFrame(() => {
-            target.style.backgroundColor = colors.red;
-            target.style.transform = 'translate3d(0, 0, 0) scale(1)';
-          });
-          break;
-          
-        case 'click':
-          if (name !== selectedCounty) {
-            startTransition(() => {
-              setSelectedCounty(name);
-              debouncedNavigate(name);
-            });
-          }
-          break;
-      }
+      if (!target || !markerImages.hover || name === selectedCounty) return;
+
+      requestAnimationFrame(() => {
+        if (e.type === 'mouseenter') {
+          target.style.backgroundImage = `url(${markerImages.hover.toDataURL()})`;
+          target.style.transform = 'translate3d(0, 0, 0) scale(1.1)';
+        } else {
+          target.style.backgroundImage = `url(${markerImages.default!.toDataURL()})`;
+          target.style.transform = 'translate3d(0, 0, 0) scale(1)';
+        }
+      });
     };
 
-    el.addEventListener('mouseenter', handleInteraction, { passive: true });
-    el.addEventListener('mouseleave', handleInteraction, { passive: true });
-    el.addEventListener('click', handleInteraction, { passive: true });
+    // Handle marker click
+    const handleClick = (e: Event) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      // Don't reselect already selected county
+      if (name === selectedCounty) return;
+
+      // Update all markers
+      markerRefs.current.forEach((markerEl, countyName) => {
+        if (countyName === name) {
+          markerEl.style.backgroundImage = `url(${markerImages.selected!.toDataURL()})`;
+          markerEl.style.transform = 'translate3d(0, 0, 0) scale(1.2)';
+        } else {
+          markerEl.style.backgroundImage = `url(${markerImages.default!.toDataURL()})`;
+          markerEl.style.transform = 'translate3d(0, 0, 0) scale(1)';
+        }
+      });
+
+      // Update state and navigate
+      startTransition(() => {
+        setSelectedCounty(name);
+        navigate(`/bills?county=${encodeURIComponent(name)}`);
+      });
+    };
+
+    el.addEventListener('mouseenter', handleHover, { passive: true });
+    el.addEventListener('mouseleave', handleHover, { passive: true });
+    el.addEventListener('click', handleClick, { passive: false });
 
     const cleanup = () => {
-      el.removeEventListener('mouseenter', handleInteraction);
-      el.removeEventListener('mouseleave', handleInteraction);
-      el.removeEventListener('click', handleInteraction);
+      el.removeEventListener('mouseenter', handleHover);
+      el.removeEventListener('mouseleave', handleHover);
+      el.removeEventListener('click', handleClick);
+      markerRefs.current.delete(name);
     };
     (el as any)._cleanup = cleanup;
 
     return el;
-  }, [selectedCounty, debouncedNavigate]);
+  }, [selectedCounty, navigate]);
 
   // Cleanup function with proper error handling
   const cleanup = useCallback(() => {
@@ -202,45 +326,30 @@ export const CountyMap = () => {
     }
   }, []);
 
-  // Initialize map with optimized loading
+  // Initialize map with WebGL info
   useEffect(() => {
-    if (!mapContainer.current || mapError) return;
+    if (!mapContainer.current || mapError || !webGLInfo) return;
 
     const initMap = async () => {
       try {
-        // Create map instance with optimized options
         const mapInstance = new maplibregl.Map({
           container: mapContainer.current!,
           ...MAP_OPTIONS,
-          transformRequest: (url: string, resourceType: string) => {
-            if (resourceType === 'Tile' && url.includes('openstreetmap.org')) {
-              return {
-                url,
-                headers: {
-                  'Accept': 'image/webp,*/*',
-                  'Accept-Encoding': 'gzip, deflate, br'
-                }
-              };
-            }
-          }
+          useWebGL2: webGLInfo.isWebGL2,
+          antialias: webGLInfo.hasHardwareAcceleration,
+          maxParallelImageRequests: webGLInfo.hasHardwareAcceleration ? 16 : 8
         });
 
-        // Wait for map to load
-        await new Promise((resolve, reject) => {
-          const timeoutId = setTimeout(() => {
-            reject(new Error('Map load timeout'));
-          }, 10000);
-
-          mapInstance.once('load', () => {
-            clearTimeout(timeoutId);
-            resolve(undefined);
-          });
-          
-          mapInstance.once('error', (error) => {
-            clearTimeout(timeoutId);
-            reject(error);
-          });
-        });
+        // Wait for map to load with timeout
+        await Promise.race([
+          new Promise((resolve, reject) => {
+            mapInstance.once('load', resolve);
+            mapInstance.once('error', reject);
+          }),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Map load timeout')), 10000)
+          )
+        ]);
 
         map.current = mapInstance;
 
@@ -249,7 +358,9 @@ export const CountyMap = () => {
           type: 'geojson',
           data: kenyaCountiesGeoJSON,
           generateId: true,
-          maxzoom: 12
+          maxzoom: 12,
+          tolerance: 0.375,
+          buffer: 2
         });
 
         mapInstance.addLayer({
@@ -263,19 +374,19 @@ export const CountyMap = () => {
           }
         });
 
-        // Batch add markers for better performance
-        const fragment = document.createDocumentFragment();
-        const newMarkers: maplibregl.Marker[] = [];
+        // Batch add markers with worker
+        const addMarkers = () => {
+          const fragment = document.createDocumentFragment();
+          const newMarkers: maplibregl.Marker[] = [];
 
-        requestAnimationFrame(() => {
           kenyaCountiesGeoJSON.features.forEach((county) => {
             const coordinates = county.geometry.coordinates;
             const name = county.properties.name;
             const el = createMarkerElement(name);
 
             const marker = new maplibregl.Marker({
-              element: el,
-              anchor: 'center'
+              ...MARKER_OPTIONS,
+              element: el
             })
             .setLngLat([coordinates[0], coordinates[1]]);
 
@@ -283,12 +394,18 @@ export const CountyMap = () => {
             newMarkers.push(marker);
           });
 
-          // Add all markers in a single frame
           requestAnimationFrame(() => {
             newMarkers.forEach(marker => marker.addTo(mapInstance));
             markers.current = newMarkers;
           });
-        });
+        };
+
+        // Use requestIdleCallback for non-critical markers
+        if ('requestIdleCallback' in window) {
+          requestIdleCallback(addMarkers, { timeout: 2000 });
+        } else {
+          setTimeout(addMarkers, 0);
+        }
 
         // Add minimal controls
         const nav = new maplibregl.NavigationControl({
@@ -306,7 +423,7 @@ export const CountyMap = () => {
 
     initMap();
     return cleanup;
-  }, [cleanup, createMarkerElement, mapError]);
+  }, [cleanup, createMarkerElement, mapError, webGLInfo]);
 
   if (mapError) {
     return <FallbackMap />;
