@@ -74,12 +74,16 @@ export function CountyMap() {
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       <Card className="p-6 md:col-span-2">
         <h2 className="text-xl font-semibold mb-4">Interactive County Map</h2>
-        <div className="aspect-video bg-gray-100 rounded-lg">
+        <div className="aspect-video bg-slate-100 rounded-lg overflow-hidden border">
           <ComposableMap
             projection="geoMercator"
             projectionConfig={{
-              scale: 6000,
-              center: [37.9062, -0.0236]
+              scale: 8000,
+              center: [37.5, -1.2]
+            }}
+            style={{
+              width: "100%",
+              height: "100%"
             }}
           >
             <Geographies geography={KENYA_TOPO_JSON}>
@@ -88,13 +92,22 @@ export function CountyMap() {
                   <Geography
                     key={geo.rsmKey}
                     geography={geo}
-                    fill={geo.properties.name === selectedCounty ? "#9b87f5" : "#D6BCFA"}
-                    stroke="#FFFFFF"
-                    strokeWidth={0.5}
+                    fill={geo.properties.name === selectedCounty ? "#6b46c1" : "#e9d5ff"}
+                    stroke="#4c1d95"
+                    strokeWidth={1}
                     style={{
-                      default: { outline: "none" },
-                      hover: { fill: "#7E69AB", outline: "none" },
-                      pressed: { outline: "none" },
+                      default: {
+                        outline: "none",
+                        transition: "all 250ms"
+                      },
+                      hover: {
+                        fill: "#a855f7",
+                        outline: "none",
+                        cursor: "pointer"
+                      },
+                      pressed: {
+                        outline: "none"
+                      }
                     }}
                     onClick={() => handleCountyClick(geo.properties.name)}
                   />
