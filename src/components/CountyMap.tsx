@@ -74,12 +74,12 @@ export function CountyMap() {
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       <Card className="p-6 md:col-span-2">
         <h2 className="text-xl font-semibold mb-4">Interactive County Map</h2>
-        <div className="aspect-video bg-slate-100 rounded-lg overflow-hidden border">
+        <div className="aspect-video bg-white rounded-lg overflow-hidden border relative">
           <ComposableMap
             projection="geoMercator"
             projectionConfig={{
-              scale: 8000,
-              center: [37.5, -1.2]
+              scale: 15000,
+              center: [37.9062, 0.0236] // Centered on Kenya
             }}
             style={{
               width: "100%",
@@ -94,7 +94,7 @@ export function CountyMap() {
                     geography={geo}
                     fill={geo.properties.name === selectedCounty ? "#6b46c1" : "#e9d5ff"}
                     stroke="#4c1d95"
-                    strokeWidth={1}
+                    strokeWidth={0.5}
                     style={{
                       default: {
                         outline: "none",
