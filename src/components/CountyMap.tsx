@@ -6,7 +6,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import { kenyaCountiesGeoJSON } from "@/data/kenya-counties";
 
 // Replace this with your Mapbox access token
-mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || 'sk.eyJ1IjoiZGV2cmF5ayIsImEiOiJjbTNzenl3a3MwM21rMmpzOTh1ZGU5dnpiIn0.t-FcrbhipBe7E_vNHeljSQ';
+mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN || 'sk.eyJ1IjoiZGV2cmF5ayIsImEiOiJjbTNzenl3a3MwM21rMmpzOTh1ZGU5dnpiIn0.t-FcrbhipBe7E_vNHeljSQ';
 
 const COUNTIES = [
   "Mombasa", "Kwale", "Kilifi", "Tana River", "Lamu", "Taita Taveta", "Garissa", 
@@ -20,6 +20,7 @@ const COUNTIES = [
 
 export function CountyMap() {
   const [selectedCounty, setSelectedCounty] = useState("");
+  const [mapError, setMapError] = useState<string | null>(null);
   const navigate = useNavigate();
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
@@ -28,59 +29,79 @@ export function CountyMap() {
   const [zoom] = useState(5.5);
 
   useEffect(() => {
-    if (!mapContainer.current) return;
+    if (!mapContainer.current) {
+      console.error("Map container not found");
+      setMapError("Map container not found");
+      return;
+    }
 
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/light-v11',
-      center: [lng, lat],
-      zoom: zoom,
-      minZoom: 5,
-      maxZoom: 9
-    });
+    try {
+      if (!mapboxgl.accessToken) {
+        throw new Error("Mapbox token not found");
+      }
 
-    const mapInstance = map.current;
+      console.log("Initializing map with token:", mapboxgl.accessToken.substring(0, 10) + "...");
 
-    mapInstance.on('load', () => {
-      // Add Kenya counties source
-      mapInstance.addSource('counties', {
-        type: 'geojson',
-        data: kenyaCountiesGeoJSON
+      map.current = new mapboxgl.Map({
+        container: mapContainer.current,
+        style: 'mapbox://styles/mapbox/light-v11',
+        center: [lng, lat],
+        zoom: zoom,
+        minZoom: 5,
+        maxZoom: 9
       });
 
-      // Add counties layer
-      mapInstance.addLayer({
-        id: 'counties-fill',
-        type: 'circle',
-        source: 'counties',
-        paint: {
-          'circle-radius': 10,
-          'circle-color': [
-            'case',
-            ['==', ['get', 'name'], selectedCounty],
-            '#047857', // Selected county color
-            '#f3f4f6' // Default county color
-          ],
-          'circle-stroke-width': 2,
-          'circle-stroke-color': '#4b5563'
-        }
-      });
+      const mapInstance = map.current;
 
-      // Add county labels
-      mapInstance.addLayer({
-        id: 'counties-label',
-        type: 'symbol',
-        source: 'counties',
-        layout: {
-          'text-field': ['get', 'name'],
-          'text-size': 12,
-          'text-anchor': 'top',
-          'text-offset': [0, 1]
-        },
-        paint: {
-          'text-color': '#1f2937',
-          'text-halo-color': '#ffffff',
-          'text-halo-width': 1
+      mapInstance.on('load', () => {
+        console.log("Map loaded successfully");
+        try {
+          // Add Kenya counties source
+          mapInstance.addSource('counties', {
+            type: 'geojson',
+            data: kenyaCountiesGeoJSON
+          });
+
+          // Add counties layer
+          mapInstance.addLayer({
+            id: 'counties-fill',
+            type: 'circle',
+            source: 'counties',
+            paint: {
+              'circle-radius': 10,
+              'circle-color': [
+                'case',
+                ['==', ['get', 'name'], selectedCounty],
+                '#047857', // Selected county color
+                '#f3f4f6' // Default county color
+              ],
+              'circle-stroke-width': 2,
+              'circle-stroke-color': '#4b5563'
+            }
+          });
+
+          // Add county labels
+          mapInstance.addLayer({
+            id: 'counties-label',
+            type: 'symbol',
+            source: 'counties',
+            layout: {
+              'text-field': ['get', 'name'],
+              'text-size': 12,
+              'text-anchor': 'top',
+              'text-offset': [0, 1]
+            },
+            paint: {
+              'text-color': '#1f2937',
+              'text-halo-color': '#ffffff',
+              'text-halo-width': 1
+            }
+          });
+
+          console.log("Map layers added successfully");
+        } catch (error) {
+          console.error("Error adding map layers:", error);
+          setMapError("Error adding map layers");
         }
       });
 
@@ -101,13 +122,24 @@ export function CountyMap() {
       mapInstance.on('mouseleave', 'counties-fill', () => {
         mapInstance.getCanvas().style.cursor = '';
       });
-    });
 
-    // Add navigation controls
-    mapInstance.addControl(new mapboxgl.NavigationControl(), 'top-right');
+      // Add navigation controls
+      mapInstance.addControl(new mapboxgl.NavigationControl(), 'top-right');
+
+      mapInstance.on('error', (e) => {
+        console.error("Mapbox error:", e);
+        setMapError("Map error occurred");
+      });
+
+    } catch (error) {
+      console.error("Error initializing map:", error);
+      setMapError("Error initializing map");
+    }
 
     return () => {
-      mapInstance.remove();
+      if (map.current) {
+        map.current.remove();
+      }
     };
   }, [lng, lat, zoom, selectedCounty, navigate]);
 
@@ -133,6 +165,11 @@ export function CountyMap() {
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       <Card className="p-6 md:col-span-2">
         <h2 className="text-2xl font-semibold mb-4">Kenya Counties Map</h2>
+        {mapError && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+            {mapError}
+          </div>
+        )}
         <div 
           ref={mapContainer}
           className="aspect-video bg-white rounded-lg overflow-hidden border relative"
