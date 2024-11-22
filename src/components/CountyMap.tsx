@@ -9,6 +9,9 @@ import debounce from 'lodash/debounce';
 // Set Mapbox access token
 mapboxgl.accessToken = 'pk.eyJ1IjoiZGV2cmF5ayIsImEiOiJjbTNzenU3azAwM2pxMmxzNXptdGZkbmRnIn0.Vve0ErWPY7nM4bIrn1bD_g';
 
+// Configure Mapbox
+mapboxgl.clearStorage();
+
 // Disable WebGL warning
 mapboxgl.prewarm();
 
@@ -32,7 +35,17 @@ const MAP_OPTIONS = {
   maxBounds: [
     [32.913597, -4.720556], // Southwest coordinates
     [41.899397, 5.506] // Northeast coordinates
-  ]
+  ],
+  crossSourceCollisions: false,
+  transformRequest: (url: string, resourceType: string) => {
+    if (resourceType === 'Source' && url.startsWith('mapbox://')) {
+      return {
+        url: url.replace('mapbox://', 'https://api.mapbox.com/'),
+        headers: { 'Authorization': `Bearer ${mapboxgl.accessToken}` }
+      };
+    }
+    return { url };
+  }
 } as const;
 
 export function CountyMap() {
@@ -78,23 +91,34 @@ export function CountyMap() {
       backgroundColor: colors.red,
       border: `2px solid ${colors.black}`,
       borderRadius: '50%',
-      cursor: 'pointer'
+      cursor: 'pointer',
+      transition: 'all 0.2s ease-in-out'
     });
 
-    el.addEventListener('mouseenter', () => {
-      el.style.backgroundColor = colors.green;
-      el.style.transform = 'scale(1.2)';
-    });
+    const handleMouseEnter = () => {
+      requestAnimationFrame(() => {
+        el.style.backgroundColor = colors.green;
+        el.style.transform = 'scale(1.2)';
+      });
+    };
 
-    el.addEventListener('mouseleave', () => {
-      el.style.backgroundColor = colors.red;
-      el.style.transform = 'scale(1)';
-    });
+    const handleMouseLeave = () => {
+      requestAnimationFrame(() => {
+        el.style.backgroundColor = colors.red;
+        el.style.transform = 'scale(1)';
+      });
+    };
 
-    el.addEventListener('click', () => {
-      setSelectedCounty(name);
-      debouncedNavigate(name);
-    });
+    const handleClick = () => {
+      requestAnimationFrame(() => {
+        setSelectedCounty(name);
+        debouncedNavigate(name);
+      });
+    };
+
+    el.addEventListener('mouseenter', handleMouseEnter);
+    el.addEventListener('mouseleave', handleMouseLeave);
+    el.addEventListener('click', handleClick);
 
     return el;
   }, [debouncedNavigate]);
@@ -112,16 +136,18 @@ export function CountyMap() {
 
       if (map.current) return cleanup;
 
-      map.current = new mapboxgl.Map({
+      // Create map instance
+      const mapInstance = new mapboxgl.Map({
         container: mapContainer.current,
         ...MAP_OPTIONS,
         center: [initialViewState.lng, initialViewState.lat],
         zoom: initialViewState.zoom,
       });
 
-      const mapInstance = map.current;
+      map.current = mapInstance;
 
-      mapInstance.on('load', () => {
+      // Handle map load
+      mapInstance.once('load', () => {
         try {
           // Add markers
           kenyaCountiesGeoJSON.features.forEach((county) => {
@@ -129,13 +155,17 @@ export function CountyMap() {
             const name = county.properties.name;
             const el = createMarkerElement(name);
 
-            const marker = new mapboxgl.Marker(el)
+            const marker = new mapboxgl.Marker({
+              element: el,
+              anchor: 'center'
+            })
               .setLngLat(coordinates)
               .setPopup(
                 new mapboxgl.Popup({ 
                   offset: 15,
                   closeButton: false,
-                  className: 'county-popup'
+                  className: 'county-popup',
+                  maxWidth: '300px'
                 })
                 .setHTML(`<h3 style="color: ${colors.black}; margin: 0; padding: 8px;">${name}</h3>`)
               );
@@ -148,7 +178,8 @@ export function CountyMap() {
           mapInstance.addControl(
             new mapboxgl.NavigationControl({
               showCompass: true,
-              showZoom: true
+              showZoom: true,
+              visualizePitch: false
             }),
             'top-right'
           );
@@ -159,9 +190,19 @@ export function CountyMap() {
         }
       });
 
+      // Handle map errors
       mapInstance.on('error', (e) => {
         console.error("Mapbox error:", e);
         setMapError("Map error occurred");
+      });
+
+      // Handle style load errors
+      mapInstance.on('styledata', () => {
+        const loaded = mapInstance.isStyleLoaded();
+        if (!loaded) {
+          console.error("Style failed to load");
+          setMapError("Map style failed to load");
+        }
       });
 
     } catch (error) {

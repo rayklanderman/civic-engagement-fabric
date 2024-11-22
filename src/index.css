@@ -98,28 +98,45 @@
 }
 
 /* Mapbox Styles */
+.mapboxgl-map {
+  font: inherit !important;
+}
+
 .county-marker {
-  transition: transform 0.2s ease, background-color 0.2s ease;
-  transform-origin: center;
+  will-change: transform;
+  transform-origin: center center;
 }
 
 .county-popup {
-  background-color: white;
-  border-radius: 4px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: inherit;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  border-radius: 8px;
+  padding: 0;
+  max-width: 300px !important;
 }
 
-.mapboxgl-popup-content {
-  padding: 0 !important;
-  border-radius: 4px !important;
+.county-popup .mapboxgl-popup-content {
+  border-radius: 8px;
+  padding: 12px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.county-popup .mapboxgl-popup-tip {
+  border-top-color: white;
+  filter: drop-shadow(0 1px 1px rgba(0,0,0,0.1));
 }
 
 .mapboxgl-ctrl-group {
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+  border-radius: 8px !important;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
 }
 
-.mapboxgl-ctrl button {
-  width: 30px !important;
-  height: 30px !important;
+.mapboxgl-ctrl-group button {
+  width: 36px !important;
+  height: 36px !important;
+}
+
+.mapboxgl-ctrl-group button:focus {
+  box-shadow: none !important;
 }
