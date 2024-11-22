@@ -6,30 +6,33 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 
 // Kenya GeoJSON data
 const KENYA_TOPO_JSON = {
-  type: "Topology",
-  objects: {
-    counties: {
-      type: "GeometryCollection",
-      geometries: [
-        {
-          type: "Polygon",
-          properties: { name: "Nairobi" },
-          coordinates: [[[36.7, -1.3], [36.9, -1.3], [36.9, -1.4], [36.7, -1.4]]]
-        },
-        {
-          type: "Polygon",
-          properties: { name: "Mombasa" },
-          coordinates: [[[39.6, -4.0], [39.7, -4.0], [39.7, -4.1], [39.6, -4.1]]]
-        },
-        {
-          type: "Polygon",
-          properties: { name: "Kisumu" },
-          coordinates: [[[34.7, -0.1], [34.9, -0.1], [34.9, -0.2], [34.7, -0.2]]]
-        },
-        // ... Simplified polygons for other counties would go here
-      ]
+  type: "FeatureCollection",
+  features: [
+    {
+      type: "Feature",
+      properties: { name: "Nairobi" },
+      geometry: {
+        type: "Polygon",
+        coordinates: [[[36.7, -1.3], [36.9, -1.3], [36.9, -1.4], [36.7, -1.4], [36.7, -1.3]]]
+      }
+    },
+    {
+      type: "Feature",
+      properties: { name: "Mombasa" },
+      geometry: {
+        type: "Polygon",
+        coordinates: [[[39.6, -4.0], [39.7, -4.0], [39.7, -4.1], [39.6, -4.1], [39.6, -4.0]]]
+      }
+    },
+    {
+      type: "Feature",
+      properties: { name: "Kisumu" },
+      geometry: {
+        type: "Polygon",
+        coordinates: [[[34.7, -0.1], [34.9, -0.1], [34.9, -0.2], [34.7, -0.2], [34.7, -0.1]]]
+      }
     }
-  }
+  ]
 };
 
 const COUNTIES = [
@@ -60,7 +63,7 @@ export function CountyMap() {
             projection="geoMercator"
             projectionConfig={{
               scale: 2500,
-              center: [37.9062, 0.0236] // Kenya's approximate center
+              center: [37.9062, 0.0236]
             }}
           >
             <Geographies geography={KENYA_TOPO_JSON}>
