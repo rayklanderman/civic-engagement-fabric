@@ -7,7 +7,7 @@ import { kenyaCountiesGeoJSON } from "@/data/kenya-counties";
 import debounce from 'lodash/debounce';
 
 // Set Mapbox access token
-mapboxgl.accessToken = 'pk.eyJ1IjoiZGV2cmF5ayIsImEiOiJjbHRyNGlybWIwZGxqMnFwOGRyZnBqbHJyIn0.qYdgOxLPjr_n4F6YGRbWGw';
+mapboxgl.accessToken = 'pk.eyJ1IjoiZGV2cmF5ayIsImEiOiJjbTNzenU3azAwM2pxMmxzNXptdGZkbmRnIn0.Vve0ErWPY7nM4bIrn1bD_g';
 
 // Disable WebGL warning
 mapboxgl.prewarm();
