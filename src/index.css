@@ -97,14 +97,20 @@
   }
 }
 
-/* Mapbox Styles */
+/* Mapbox Styles with performance optimizations */
 .mapboxgl-map {
   font: inherit !important;
+  contain: layout style paint;
+  will-change: transform;
 }
 
 .county-marker {
+  contain: layout style paint;
   will-change: transform;
-  transform-origin: center center;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+  transform-style: preserve-3d;
 }
 
 .county-popup {
@@ -113,12 +119,18 @@
   border-radius: 8px;
   padding: 0;
   max-width: 300px !important;
+  contain: layout style paint;
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
 }
 
 .county-popup .mapboxgl-popup-content {
   border-radius: 8px;
   padding: 12px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  contain: layout style paint;
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
 }
 
 .county-popup .mapboxgl-popup-tip {
@@ -130,11 +142,15 @@
   border-radius: 8px !important;
   overflow: hidden;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+  contain: layout style paint;
 }
 
 .mapboxgl-ctrl-group button {
   width: 36px !important;
   height: 36px !important;
+  contain: layout style paint;
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
 }
 
 .mapboxgl-ctrl-group button:focus {
