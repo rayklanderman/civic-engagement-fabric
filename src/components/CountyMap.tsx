@@ -7,7 +7,10 @@ import { kenyaCountiesGeoJSON } from "@/data/kenya-counties";
 import debounce from 'lodash/debounce';
 
 // Set Mapbox access token
-mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN || '';
+mapboxgl.accessToken = 'pk.eyJ1IjoiZGV2cmF5ayIsImEiOiJjbHRyNGlybWIwZGxqMnFwOGRyZnBqbHJyIn0.qYdgOxLPjr_n4F6YGRbWGw';
+
+// Disable WebGL warning
+mapboxgl.prewarm();
 
 // Kenyan flag colors
 const colors = {
@@ -25,7 +28,7 @@ const MAP_OPTIONS = {
   attributionControl: true,
   preserveDrawingBuffer: true,
   antialias: true,
-  failIfMajorPerformanceCaveat: true,
+  failIfMajorPerformanceCaveat: false,
   maxBounds: [
     [32.913597, -4.720556], // Southwest coordinates
     [41.899397, 5.506] // Northeast coordinates
