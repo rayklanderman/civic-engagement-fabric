@@ -3,7 +3,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import { useEffect, useRef, useCallback, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import debounce from 'lodash/debounce';
-import { colors } from '../lib/colors';
+import { colors } from '@/lib/colors';
 import { Card } from "@/components/ui/card";
 import { FallbackMap } from './FallbackMap';
 import { kenyaCountiesGeoJSON } from "@/data/kenya-counties";
