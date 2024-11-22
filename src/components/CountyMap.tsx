@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ComposableMap, Geographies, Geography } from "react-simple-maps";
 import { useNavigate } from "react-router-dom";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Card } from "@/components/ui/card";
 
 // Kenya GeoJSON data with accurate county coordinates
 const KENYA_TOPO_JSON = {
