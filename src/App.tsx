@@ -9,6 +9,7 @@ export const AuthContext = createContext<any>(null);
 
 // Enable all React Router v7 future flags
 const router = createBrowserRouter(routes, {
+  basename: '/',
   future: {
     v7_startTransition: true,
     v7_relativeSplatPath: true,
