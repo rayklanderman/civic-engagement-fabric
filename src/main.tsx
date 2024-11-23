@@ -14,6 +14,9 @@ const queryClient = new QueryClient({
       staleTime: 5 * 60 * 1000, // 5 minutes
       suspense: true,
     },
+    mutations: {
+      retry: 1,
+    },
   },
 })
 
@@ -24,10 +27,10 @@ if (!root) throw new Error('Root element not found')
 // Render app with error boundaries and suspense
 createRoot(root).render(
   <React.StrictMode>
-    <Suspense fallback={<Loading />}>
-      <QueryClientProvider client={queryClient}>
+    <QueryClientProvider client={queryClient}>
+      <Suspense fallback={<Loading />}>
         <App />
-      </QueryClientProvider>
-    </Suspense>
+      </Suspense>
+    </QueryClientProvider>
   </React.StrictMode>
 )
