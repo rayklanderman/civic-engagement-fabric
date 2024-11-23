@@ -1,10 +1,10 @@
 import React from 'react'
 import { createRoot } from 'react-dom/client'
-import { BrowserRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import App from './App'
 import './styles/global.css'
 
+// Configure QueryClient with retries and caching
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -15,15 +15,15 @@ const queryClient = new QueryClient({
   },
 })
 
+// Get root element and validate
 const root = document.getElementById('root')
 if (!root) throw new Error('Root element not found')
 
+// Render app with error boundaries
 createRoot(root).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
+      <App />
     </QueryClientProvider>
   </React.StrictMode>
 )
