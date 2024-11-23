@@ -2,8 +2,6 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { useMediaQuery } from '@/hooks/use-media-query';
-import { useRouter } from 'next/navigation';
-import { startTransition } from 'react';
 
 // Initialize Mapbox with your access token
 mapboxgl.accessToken = 'pk.eyJ1IjoiZGV2cmF5ayIsImEiOiJjbTNzenU3azAwM2pxMmxzNXptdGZkbmRnIn0.Vve0ErWPY7nM4bIrn1bD_g';
@@ -69,7 +67,6 @@ export function CountyMap({ selectedCounty, onCountySelect }: CountyMapProps) {
   const popups = useRef<{ [key: string]: mapboxgl.Popup }>({});
   const [error, setError] = useState<string | null>(null);
   const isMobile = useMediaQuery('(max-width: 768px)');
-  const router = useRouter();
 
   // Create a stable reference to the marker click handler
   const handleMarkerClick = useCallback((countyName: string, coords: { lat: number, lng: number }) => {
@@ -77,11 +74,9 @@ export function CountyMap({ selectedCounty, onCountySelect }: CountyMapProps) {
       e.preventDefault();
       e.stopPropagation();
 
-      // Update selected county using startTransition
+      // Update selected county
       if (onCountySelect) {
-        startTransition(() => {
-          onCountySelect(countyName);
-        });
+        onCountySelect(countyName);
       }
 
       // Only fly to location if map exists and coordinates are different
