@@ -63,6 +63,7 @@ interface CountyMapProps {
 export function CountyMap({ selectedCounty, onCountySelect }: CountyMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
+  const markerElements = useRef<{ [key: string]: HTMLDivElement }>({});
   const markers = useRef<{ [key: string]: mapboxgl.Marker }>({});
   const popups = useRef<{ [key: string]: mapboxgl.Popup }>({});
   const [error, setError] = useState<string | null>(null);
@@ -74,37 +75,27 @@ export function CountyMap({ selectedCounty, onCountySelect }: CountyMapProps) {
       e.preventDefault();
       e.stopPropagation();
 
+      if (!map.current) return;
+
       // Update selected county
       if (onCountySelect) {
         onCountySelect(countyName);
       }
 
-      // Only fly to location if map exists and coordinates are different
-      if (map.current) {
-        const currentCenter = map.current.getCenter();
-        const currentZoom = map.current.getZoom();
-        const targetZoom = isMobile ? 8 : 9;
-
-        if (
-          Math.abs(currentCenter.lng - coords.lng) > 0.0001 ||
-          Math.abs(currentCenter.lat - coords.lat) > 0.0001 ||
-          Math.abs(currentZoom - targetZoom) > 0.1
-        ) {
-          map.current.flyTo({
-            center: [coords.lng, coords.lat],
-            zoom: targetZoom,
-            duration: 1500,
-            essential: true
-          });
-        }
-      }
+      // Fly to the county location
+      const targetZoom = isMobile ? 8 : 9;
+      map.current.flyTo({
+        center: [coords.lng, coords.lat],
+        zoom: targetZoom,
+        duration: 1500,
+        essential: true
+      });
 
       // Toggle popup
-      const marker = markers.current[countyName];
       const popup = popups.current[countyName];
-      if (marker && popup) {
+      if (popup) {
         if (!popup.isOpen()) {
-          popup.addTo(map.current!);
+          popup.setLngLat([coords.lng, coords.lat]).addTo(map.current);
         } else {
           popup.remove();
         }
@@ -126,103 +117,129 @@ export function CountyMap({ selectedCounty, onCountySelect }: CountyMapProps) {
           [33.9098, -4.7677], // SW
           [41.9028, 5.0619]  // NE
         ],
-        dragRotate: false, // Disable rotation for better performance
-        pitchWithRotate: false
+        dragRotate: false,
+        pitchWithRotate: false,
+        attributionControl: false
       });
 
       // Add navigation controls
       map.current.addControl(
         new mapboxgl.NavigationControl({
-          showCompass: false, // Disable compass since rotation is disabled
+          showCompass: false,
           showZoom: true,
           visualizePitch: false
         }),
         isMobile ? 'bottom-right' : 'top-right'
       );
 
-      // Add markers for each county
-      Object.entries(countyCoordinates).forEach(([countyName, coords]) => {
-        // Create marker element
-        const el = document.createElement('div');
-        el.className = 'county-marker';
-        el.style.width = '24px';
-        el.style.height = '24px';
-        el.style.backgroundColor = selectedCounty === countyName ? '#2563eb' : '#64748b';
-        el.style.borderRadius = '50%';
-        el.style.cursor = 'pointer';
-        el.style.transition = 'all 0.2s ease-in-out';
-        el.style.border = '2px solid white';
-        el.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
+      // Wait for map to load before adding markers
+      map.current.on('load', () => {
+        // Add markers for each county
+        Object.entries(countyCoordinates).forEach(([countyName, coords]) => {
+          // Create marker element
+          const el = document.createElement('div');
+          el.className = 'county-marker';
+          el.style.width = '24px';
+          el.style.height = '24px';
+          el.style.backgroundColor = selectedCounty === countyName ? '#2563eb' : '#64748b';
+          el.style.borderRadius = '50%';
+          el.style.cursor = 'pointer';
+          el.style.transition = 'all 0.2s ease-in-out';
+          el.style.border = '2px solid white';
+          el.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
+          el.style.position = 'relative';
+          el.style.zIndex = selectedCounty === countyName ? '2' : '1';
 
-        // Create popup
-        const popup = new mapboxgl.Popup({
-          closeButton: false,
-          closeOnClick: false,
-          offset: 25,
-          className: 'county-popup',
-          maxWidth: '300px'
-        })
-          .setHTML(`
-            <div class="p-2 bg-white rounded-lg shadow-lg">
-              <h3 class="text-lg font-semibold text-gray-900">${countyName}</h3>
-              <p class="text-sm text-gray-600">Click to view county details</p>
-            </div>
-          `);
+          // Store element reference
+          markerElements.current[countyName] = el;
 
-        // Create and add marker
-        const marker = new mapboxgl.Marker({
-          element: el,
-          anchor: 'center'
-        })
-          .setLngLat([coords.lng, coords.lat])
-          .addTo(map.current!);
+          // Create popup
+          const popup = new mapboxgl.Popup({
+            closeButton: false,
+            closeOnClick: false,
+            offset: 25,
+            className: 'county-popup',
+            maxWidth: '300px',
+            anchor: 'bottom'
+          })
+            .setHTML(`
+              <div class="p-2 bg-white rounded-lg shadow-lg">
+                <h3 class="text-lg font-semibold text-gray-900">${countyName}</h3>
+                <p class="text-sm text-gray-600">Click to view county details</p>
+              </div>
+            `);
 
-        // Store references
-        markers.current[countyName] = marker;
-        popups.current[countyName] = popup;
+          // Create and add marker
+          const marker = new mapboxgl.Marker({
+            element: el,
+            anchor: 'center',
+            draggable: false,
+            clickTolerance: 3
+          })
+            .setLngLat([coords.lng, coords.lat])
+            .addTo(map.current!);
 
-        // Add event listeners
-        el.addEventListener('click', handleMarkerClick(countyName, coords));
+          // Store references
+          markers.current[countyName] = marker;
+          popups.current[countyName] = popup;
 
-        el.addEventListener('mouseenter', () => {
-          el.style.transform = 'scale(1.2)';
-          if (selectedCounty !== countyName) {
-            el.style.backgroundColor = '#4b5563';
-          }
-          if (!popup.isOpen()) {
-            popup.addTo(map.current!);
-          }
-        });
+          // Add event listeners with proper cleanup
+          const clickHandler = handleMarkerClick(countyName, coords);
+          el.addEventListener('click', clickHandler);
 
-        el.addEventListener('mouseleave', () => {
-          el.style.transform = 'scale(1)';
-          if (selectedCounty !== countyName) {
-            el.style.backgroundColor = '#64748b';
-          }
-          if (!marker.getPopup()?.isOpen()) {
-            popup.remove();
-          }
+          const handleMouseEnter = () => {
+            el.style.transform = 'scale(1.2)';
+            if (selectedCounty !== countyName) {
+              el.style.backgroundColor = '#4b5563';
+            }
+            if (!popup.isOpen()) {
+              popup.setLngLat([coords.lng, coords.lat]).addTo(map.current!);
+            }
+          };
+
+          const handleMouseLeave = () => {
+            el.style.transform = 'scale(1)';
+            if (selectedCounty !== countyName) {
+              el.style.backgroundColor = '#64748b';
+            }
+            if (!popup.isOpen()) {
+              popup.remove();
+            }
+          };
+
+          el.addEventListener('mouseenter', handleMouseEnter);
+          el.addEventListener('mouseleave', handleMouseLeave);
+
+          // Store event listeners for cleanup
+          el.dataset.eventHandlers = JSON.stringify({
+            click: clickHandler,
+            mouseenter: handleMouseEnter,
+            mouseleave: handleMouseLeave
+          });
         });
       });
-
-      // Update marker colors when selected county changes
-      if (selectedCounty) {
-        Object.entries(markers.current).forEach(([countyName, marker]) => {
-          const el = marker.getElement();
-          el.style.backgroundColor = countyName === selectedCounty ? '#2563eb' : '#64748b';
-        });
-      }
 
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred initializing the map');
     }
 
     return () => {
+      // Clean up event listeners
+      Object.entries(markerElements.current).forEach(([_, el]) => {
+        const handlers = el.dataset.eventHandlers ? JSON.parse(el.dataset.eventHandlers) : {};
+        Object.entries(handlers).forEach(([event, handler]) => {
+          el.removeEventListener(event, handler as EventListener);
+        });
+      });
+
       // Clean up markers and popups
       Object.values(markers.current).forEach(marker => marker.remove());
       Object.values(popups.current).forEach(popup => popup.remove());
+      
+      // Clear references
       markers.current = {};
       popups.current = {};
+      markerElements.current = {};
       
       // Remove map
       if (map.current) {
@@ -230,6 +247,14 @@ export function CountyMap({ selectedCounty, onCountySelect }: CountyMapProps) {
       }
     };
   }, [selectedCounty, handleMarkerClick, isMobile]);
+
+  // Update marker styles when selected county changes
+  useEffect(() => {
+    Object.entries(markerElements.current).forEach(([countyName, el]) => {
+      el.style.backgroundColor = countyName === selectedCounty ? '#2563eb' : '#64748b';
+      el.style.zIndex = countyName === selectedCounty ? '2' : '1';
+    });
+  }, [selectedCounty]);
 
   if (error) {
     return (
