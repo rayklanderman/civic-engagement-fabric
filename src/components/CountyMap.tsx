@@ -4,7 +4,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import { useMediaQuery } from '@/hooks/use-media-query';
 
 // Initialize Mapbox with your access token
-mapboxgl.accessToken = 'pk.eyJ1IjoicmF5a2xhbmRlcm1hbiIsImEiOiJjbHRoMGlsNnUwbHJyMmptbmR2Z2VnOWNsIn0.cVHRKvHUYFGQnOHBxONPZA';
+mapboxgl.accessToken = 'pk.eyJ1IjoiZGV2cmF5ayIsImEiOiJjbTNzenU3azAwM2pxMmxzNXptdGZkbmRnIn0.Vve0ErWPY7nM4bIrn1bD_g';
 
 // Kenya county coordinates from the backend
 const countyCoordinates = {
