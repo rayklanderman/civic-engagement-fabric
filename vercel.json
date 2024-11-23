@@ -1,11 +1,11 @@
 {
   "version": 2,
+  "framework": "vite",
   "buildCommand": "npm run build",
   "installCommand": "npm install",
   "outputDirectory": "dist",
-  "framework": "vite",
   "env": {
-    "NODE_VERSION": "22.x",
+    "NODE_VERSION": "20.x",
     "VITE_SUPABASE_URL": "https://kdybcavitpsqgdgdwwki.supabase.co",
     "VITE_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkeWJjYXZpdHBzcWdkZ2R3d2tpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzIzNzM2MzcsImV4cCI6MjA0Nzk0OTYzN30.JRjaDe0eZAbkXYDVcRJW3LnxDfMMRVIuuwGhEDp_nhM"
   },
