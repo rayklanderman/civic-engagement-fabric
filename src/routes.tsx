@@ -1,20 +1,25 @@
 import { RouteObject } from 'react-router-dom';
 import { lazy, Suspense } from 'react';
 import { ErrorBoundary } from './components/ErrorBoundary';
-import { LandingPage } from "@/pages/LandingPage";
-import { CountyMap } from "@/components/CountyMap";
-import { BillsPage } from "@/pages/BillsPage";
+import { Layout } from "@/components/Layout";
 
 // Lazy load components
-const Index = lazy(() => import('./pages/Index'));
+const LandingPage = lazy(() => import('./pages/LandingPage'));
 const Counties = lazy(() => import('./pages/Counties'));
 const Bills = lazy(() => import('./pages/Bills'));
 const Statistics = lazy(() => import('./pages/Statistics'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
-// Wrap lazy components with Suspense
+// Loading component
+const Loading = () => (
+  <div className="flex items-center justify-center min-h-screen">
+    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-[#BB0000]"></div>
+  </div>
+);
+
+// Wrap lazy components with Suspense and ErrorBoundary
 const withSuspense = (Component: React.ComponentType) => (
-  <Suspense fallback={<div>Loading...</div>}>
+  <Suspense fallback={<Loading />}>
     <ErrorBoundary>
       <Component />
     </ErrorBoundary>
@@ -23,37 +28,33 @@ const withSuspense = (Component: React.ComponentType) => (
 
 export const routes: RouteObject[] = [
   {
-    path: "/",
-    element: <LandingPage />,
+    element: <Layout />,
     errorElement: withSuspense(NotFound),
+    children: [
+      {
+        path: "/",
+        element: withSuspense(LandingPage),
+      },
+      {
+        path: "/counties",
+        element: withSuspense(Counties),
+      },
+      {
+        path: "/bills",
+        element: withSuspense(Bills),
+      },
+      {
+        path: "/bills/national",
+        element: withSuspense(Bills),
+      },
+      {
+        path: "/statistics",
+        element: withSuspense(Statistics),
+      },
+      {
+        path: "*",
+        element: withSuspense(NotFound),
+      }
+    ],
   },
-  {
-    path: "/map",
-    element: <CountyMap selectedCounty={null} />,
-    errorElement: withSuspense(NotFound),
-  },
-  {
-    path: "/bills",
-    element: <BillsPage type="county" />,
-    errorElement: withSuspense(NotFound),
-  },
-  {
-    path: "/bills/national",
-    element: <BillsPage type="national" />,
-    errorElement: withSuspense(NotFound),
-  },
-  {
-    path: "/counties",
-    element: withSuspense(Counties),
-    errorElement: withSuspense(NotFound),
-  },
-  {
-    path: "/statistics",
-    element: withSuspense(Statistics),
-    errorElement: withSuspense(NotFound),
-  },
-  {
-    path: '*',
-    element: withSuspense(NotFound)
-  }
 ];

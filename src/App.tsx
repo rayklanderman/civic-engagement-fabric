@@ -1,13 +1,11 @@
-import { Toaster } from "sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { Toaster } from 'sonner';
+import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 import { routes } from './routes';
-import { useEffect } from 'react';
-import './styles/map.css';
-import { TestConnection } from '@/components/TestConnection';
+import { supabase } from '@/lib/supabase';
+import { createContext, useEffect, useState } from 'react';
 
-const queryClient = new QueryClient();
+// Create auth context
+export const AuthContext = createContext<any>(null);
 
 // Enable all React Router v7 future flags
 const router = createBrowserRouter(routes, {
@@ -16,58 +14,32 @@ const router = createBrowserRouter(routes, {
     v7_relativeSplatPath: true,
     v7_fetcherPersist: true,
     v7_normalizeFormMethod: true,
-    v7_partialHydration: true,
-    v7_skipActionErrorRevalidation: true
   }
 });
 
 export default function App() {
-  // Handle PWA install prompt
+  const [session, setSession] = useState<any>(null);
+
   useEffect(() => {
-    let deferredPrompt: any;
-
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
     });
 
-    // Optional: Show install prompt after user interaction
-    const showInstallPrompt = () => {
-      if (deferredPrompt) {
-        deferredPrompt.prompt();
-        deferredPrompt.userChoice.then((choiceResult: { outcome: string }) => {
-          if (choiceResult.outcome === 'accepted') {
-            console.log('User accepted the install prompt');
-          }
-          deferredPrompt = null;
-        });
-      }
-    };
-
-    // Handle offline/online status
-    window.addEventListener('online', () => {
-      console.log('App is online');
-      queryClient.invalidateQueries();
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
     });
 
-    window.addEventListener('offline', () => {
-      console.log('App is offline');
-    });
-
-    return () => {
-      window.removeEventListener('beforeinstallprompt', () => {});
-      window.removeEventListener('online', () => {});
-      window.removeEventListener('offline', () => {});
-    };
+    return () => subscription.unsubscribe();
   }, []);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        {import.meta.env.DEV && <TestConnection />}
-        <RouterProvider router={router} />
-      </TooltipProvider>
-    </QueryClientProvider>
+    <AuthContext.Provider value={{ session, supabase }}>
+      <Toaster position="top-right" />
+      <RouterProvider router={router} />
+    </AuthContext.Provider>
   );
 }

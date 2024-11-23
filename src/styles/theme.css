@@ -1,0 +1,59 @@
+/* Kenyan Flag Theme Colors */
+:root {
+  --kenya-red: #BB0000;
+  --kenya-green: #006600;
+  --kenya-black: #000000;
+  --kenya-white: #FFFFFF;
+}
+
+/* Header and Navigation Styles */
+.header {
+  background-color: var(--kenya-black);
+  border-bottom: 4px solid var(--kenya-red);
+}
+
+.nav-menu {
+  display: flex !important;
+  visibility: visible !important;
+}
+
+.site-title {
+  color: var(--kenya-white);
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+.nav-link {
+  color: var(--kenya-white);
+  padding: 0.5rem 1rem;
+  transition: color 0.3s ease;
+}
+
+.nav-link:hover {
+  color: var(--kenya-red);
+}
+
+/* Main Content Theme */
+.main-content {
+  background: linear-gradient(
+    135deg,
+    var(--kenya-black) 0%,
+    var(--kenya-red) 33%,
+    var(--kenya-green) 66%,
+    var(--kenya-white) 100%
+  );
+}
+
+/* Button Theme */
+.kenya-button {
+  background-color: var(--kenya-red);
+  color: var(--kenya-white);
+  border: 2px solid var(--kenya-black);
+  padding: 0.5rem 1rem;
+  transition: all 0.3s ease;
+}
+
+.kenya-button:hover {
+  background-color: var(--kenya-green);
+  border-color: var(--kenya-white);
+}
