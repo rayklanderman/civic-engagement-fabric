@@ -1,14 +1,29 @@
 {
-  "rewrites": [
+  "version": 2,
+  "builds": [
     {
-      "source": "/(.*)",
-      "destination": "/index.html"
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "buildCommand": "npm install && tsc && vite build",
+        "outputDirectory": "dist"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
     }
   ],
   "headers": [
     {
-      "source": "/service-worker.js",
+      "source": "/manifest.json",
       "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/manifest+json"
+        },
         {
           "key": "Cache-Control",
           "value": "public, max-age=0, must-revalidate"
@@ -16,7 +31,7 @@
       ]
     },
     {
-      "source": "/manifest.json",
+      "source": "/service-worker.js",
       "headers": [
         {
           "key": "Cache-Control",
