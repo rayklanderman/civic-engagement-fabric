@@ -89,16 +89,29 @@ export function CountyMap({ selectedCounty, onCountySelect }: CountyMapProps) {
         el.style.transition = 'transform 0.2s ease-in-out';
 
         el.addEventListener('click', (e) => {
+          e.preventDefault(); // Prevent default behavior
           e.stopPropagation();
+          
+          // Update selected county first
           onCountySelect?.(county.properties.id);
           
-          // Center map on selected county with animation
-          map.current?.flyTo({
-            center: county.geometry.coordinates,
-            zoom: isMobile ? 8 : 9,
-            duration: 1000,
-            essential: true
-          });
+          // Get current map center and zoom
+          const currentCenter = map.current?.getCenter();
+          const currentZoom = map.current?.getZoom();
+          
+          // Only animate if position actually changes
+          if (currentCenter && 
+              (Math.abs(currentCenter.lng - county.geometry.coordinates[0]) > 0.0001 ||
+               Math.abs(currentCenter.lat - county.geometry.coordinates[1]) > 0.0001 ||
+               currentZoom !== (isMobile ? 8 : 9))) {
+            
+            map.current?.flyTo({
+              center: county.geometry.coordinates,
+              zoom: isMobile ? 8 : 9,
+              duration: 1000,
+              essential: true
+            });
+          }
 
           // Show popup for selected county
           marker.togglePopup();
