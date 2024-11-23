@@ -1,9 +1,18 @@
 import { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, GeoJSON, useMap } from 'react-leaflet';
 import { useNavigate } from 'react-router-dom';
+import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import kenyaCounties from '../data/kenya-counties.json';
+
+// Fix Leaflet icon issues
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
 
 // Kenya GeoJSON data with simplified county boundaries
 // const kenyaCounties = {
@@ -90,28 +99,23 @@ export function CountyMap({ selectedCounty, onCountySelect }: CountyMapProps) {
 
     // Add county name label
     const center = layer.getBounds().getCenter();
-    const label = L.divIcon({
-      className: 'county-label',
-      html: `<div style="
-        background-color: rgba(255,255,255,0.8);
-        padding: 2px 6px;
-        border-radius: 4px;
-        font-size: 12px;
-        font-weight: 600;
-        color: #1f2937;
-        white-space: nowrap;
-      ">${feature.properties.name}</div>`,
-    });
-    L.marker(center, { icon: label }).addTo(layer._map);
+    const tooltip = L.tooltip({
+      permanent: true,
+      direction: 'center',
+      className: 'county-label'
+    }).setContent(feature.properties.name);
+    
+    layer.bindTooltip(tooltip);
   };
 
   return (
-    <div className="w-full h-[600px] rounded-lg shadow-lg overflow-hidden" style={{ border: '1px solid #e2e8f0' }}>
+    <div className="w-full h-[600px] rounded-lg shadow-lg overflow-hidden relative" style={{ border: '1px solid #e2e8f0' }}>
       <MapContainer
         center={[0.0236, 37.9062]}
         zoom={isMobile ? 5 : 6}
         style={{ height: '100%', width: '100%' }}
-        zoomControl={false}
+        zoomControl={true}
+        scrollWheelZoom={true}
       >
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
