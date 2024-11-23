@@ -74,7 +74,7 @@ export function CountyMap({ selectedCounty, onCountySelect }: CountyMapProps) {
           .setLngLat(county.geometry.coordinates)
           .setPopup(new maplibregl.Popup({
             closeButton: false,
-            closeOnClick: true,
+            closeOnClick: false,
             maxWidth: isMobile ? '200px' : '300px',
             className: 'county-popup'
           }).setHTML(`
@@ -91,26 +91,45 @@ export function CountyMap({ selectedCounty, onCountySelect }: CountyMapProps) {
         el.addEventListener('click', (e) => {
           e.stopPropagation();
           onCountySelect?.(county.properties.id);
+          
+          // Center map on selected county with animation
+          map.current?.flyTo({
+            center: county.geometry.coordinates,
+            zoom: isMobile ? 8 : 9,
+            duration: 1000,
+            essential: true
+          });
+
+          // Show popup for selected county
+          marker.togglePopup();
         });
 
         el.addEventListener('mouseenter', () => {
           el.style.transform = `scale(${isMobile ? 1.1 : 1.2})`;
-          marker.togglePopup();
+          if (selectedCounty !== county.properties.id) {
+            marker.togglePopup();
+          }
         });
 
         el.addEventListener('mouseleave', () => {
-          el.style.transform = 'scale(1)';
-          marker.togglePopup();
+          if (selectedCounty !== county.properties.id) {
+            el.style.transform = 'scale(1)';
+            marker.togglePopup();
+          }
         });
 
         // Add touch events for mobile
         if (isMobile) {
           el.addEventListener('touchstart', () => {
-            el.style.transform = 'scale(1.1)';
+            if (selectedCounty !== county.properties.id) {
+              el.style.transform = 'scale(1.1)';
+            }
           });
 
           el.addEventListener('touchend', () => {
-            el.style.transform = 'scale(1)';
+            if (selectedCounty !== county.properties.id) {
+              el.style.transform = 'scale(1)';
+            }
           });
         }
       });
