@@ -28,8 +28,12 @@ const ErrorFallback = () => (
   </div>
 );
 
+// Get base URL from Vite environment
+const base = import.meta.env.BASE_URL;
+
 // Enable all React Router v7 future flags
 const router = createBrowserRouter(routes, {
+  basename: base,
   future: {
     v7_startTransition: true,
     v7_relativeSplatPath: true,

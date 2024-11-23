@@ -93,7 +93,8 @@ export function CountyMap({ selectedCounty, onCountySelect }: CountyMapProps) {
         if (onCountySelect) {
           onCountySelect(feature.properties.name);
         }
-        navigate(`/bills?county=${feature.properties.name.toLowerCase()}`);
+        // Use relative path for navigation
+        navigate(`bills?county=${encodeURIComponent(feature.properties.name.toLowerCase())}`);
       }
     });
 
