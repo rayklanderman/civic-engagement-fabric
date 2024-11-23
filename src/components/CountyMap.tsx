@@ -1,7 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { useMediaQuery } from '@/hooks/use-media-query';
+import { useRouter } from 'next/navigation';
+import { startTransition } from 'react';
 
 // Initialize Mapbox with your access token
 mapboxgl.accessToken = 'pk.eyJ1IjoiZGV2cmF5ayIsImEiOiJjbTNzenU3azAwM2pxMmxzNXptdGZkbmRnIn0.Vve0ErWPY7nM4bIrn1bD_g';
@@ -64,8 +66,56 @@ export function CountyMap({ selectedCounty, onCountySelect }: CountyMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const markers = useRef<{ [key: string]: mapboxgl.Marker }>({});
+  const popups = useRef<{ [key: string]: mapboxgl.Popup }>({});
   const [error, setError] = useState<string | null>(null);
   const isMobile = useMediaQuery('(max-width: 768px)');
+  const router = useRouter();
+
+  // Create a stable reference to the marker click handler
+  const handleMarkerClick = useCallback((countyName: string, coords: { lat: number, lng: number }) => {
+    return (e: MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      // Update selected county using startTransition
+      if (onCountySelect) {
+        startTransition(() => {
+          onCountySelect(countyName);
+        });
+      }
+
+      // Only fly to location if map exists and coordinates are different
+      if (map.current) {
+        const currentCenter = map.current.getCenter();
+        const currentZoom = map.current.getZoom();
+        const targetZoom = isMobile ? 8 : 9;
+
+        if (
+          Math.abs(currentCenter.lng - coords.lng) > 0.0001 ||
+          Math.abs(currentCenter.lat - coords.lat) > 0.0001 ||
+          Math.abs(currentZoom - targetZoom) > 0.1
+        ) {
+          map.current.flyTo({
+            center: [coords.lng, coords.lat],
+            zoom: targetZoom,
+            duration: 1500,
+            essential: true
+          });
+        }
+      }
+
+      // Toggle popup
+      const marker = markers.current[countyName];
+      const popup = popups.current[countyName];
+      if (marker && popup) {
+        if (!popup.isOpen()) {
+          popup.addTo(map.current!);
+        } else {
+          popup.remove();
+        }
+      }
+    };
+  }, [isMobile, onCountySelect]);
 
   useEffect(() => {
     if (!mapContainer.current) return;
@@ -80,13 +130,15 @@ export function CountyMap({ selectedCounty, onCountySelect }: CountyMapProps) {
         maxBounds: [
           [33.9098, -4.7677], // SW
           [41.9028, 5.0619]  // NE
-        ]
+        ],
+        dragRotate: false, // Disable rotation for better performance
+        pitchWithRotate: false
       });
 
       // Add navigation controls
       map.current.addControl(
         new mapboxgl.NavigationControl({
-          showCompass: !isMobile,
+          showCompass: false, // Disable compass since rotation is disabled
           showZoom: true,
           visualizePitch: false
         }),
@@ -107,6 +159,21 @@ export function CountyMap({ selectedCounty, onCountySelect }: CountyMapProps) {
         el.style.border = '2px solid white';
         el.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
 
+        // Create popup
+        const popup = new mapboxgl.Popup({
+          closeButton: false,
+          closeOnClick: false,
+          offset: 25,
+          className: 'county-popup',
+          maxWidth: '300px'
+        })
+          .setHTML(`
+            <div class="p-2 bg-white rounded-lg shadow-lg">
+              <h3 class="text-lg font-semibold text-gray-900">${countyName}</h3>
+              <p class="text-sm text-gray-600">Click to view county details</p>
+            </div>
+          `);
+
         // Create and add marker
         const marker = new mapboxgl.Marker({
           element: el,
@@ -115,45 +182,21 @@ export function CountyMap({ selectedCounty, onCountySelect }: CountyMapProps) {
           .setLngLat([coords.lng, coords.lat])
           .addTo(map.current!);
 
-        // Create popup
-        const popup = new mapboxgl.Popup({
-          closeButton: false,
-          closeOnClick: false,
-          offset: 25,
-          className: 'county-popup'
-        })
-          .setHTML(`
-            <div class="p-2">
-              <h3 class="text-lg font-semibold">${countyName}</h3>
-            </div>
-          `);
+        // Store references
+        markers.current[countyName] = marker;
+        popups.current[countyName] = popup;
 
         // Add event listeners
-        el.addEventListener('click', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-
-          // Update selected county
-          onCountySelect?.(countyName);
-
-          // Fly to county
-          map.current?.flyTo({
-            center: [coords.lng, coords.lat],
-            zoom: isMobile ? 8 : 9,
-            duration: 1500,
-            essential: true
-          });
-
-          // Show popup
-          marker.setPopup(popup).togglePopup();
-        });
+        el.addEventListener('click', handleMarkerClick(countyName, coords));
 
         el.addEventListener('mouseenter', () => {
           el.style.transform = 'scale(1.2)';
           if (selectedCounty !== countyName) {
             el.style.backgroundColor = '#4b5563';
           }
-          marker.setPopup(popup).togglePopup();
+          if (!popup.isOpen()) {
+            popup.addTo(map.current!);
+          }
         });
 
         el.addEventListener('mouseleave', () => {
@@ -161,11 +204,10 @@ export function CountyMap({ selectedCounty, onCountySelect }: CountyMapProps) {
           if (selectedCounty !== countyName) {
             el.style.backgroundColor = '#64748b';
           }
-          marker.getPopup().remove();
+          if (!marker.getPopup()?.isOpen()) {
+            popup.remove();
+          }
         });
-
-        // Store marker reference
-        markers.current[countyName] = marker;
       });
 
       // Update marker colors when selected county changes
@@ -181,11 +223,18 @@ export function CountyMap({ selectedCounty, onCountySelect }: CountyMapProps) {
     }
 
     return () => {
+      // Clean up markers and popups
+      Object.values(markers.current).forEach(marker => marker.remove());
+      Object.values(popups.current).forEach(popup => popup.remove());
+      markers.current = {};
+      popups.current = {};
+      
+      // Remove map
       if (map.current) {
         map.current.remove();
       }
     };
-  }, [selectedCounty, onCountySelect, isMobile]);
+  }, [selectedCounty, handleMarkerClick, isMobile]);
 
   if (error) {
     return (
