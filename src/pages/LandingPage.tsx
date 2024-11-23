@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import { BillsSelectionDialog } from "@/components/dialogs/BillsSelectionDialog";
 import { CountySelectionDialog } from "@/components/dialogs/CountySelectionDialog";
 import { ContactForm } from "@/components/ContactForm";
-import { Header } from "@/components/Header";
 
 export function LandingPage() {
   const [billsDialogOpen, setBillsDialogOpen] = useState(false);
@@ -13,7 +12,6 @@ export function LandingPage() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <Header />
       <main className="flex-1">
         {/* Hero Section */}
         <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48 bg-gradient-to-b from-black via-[#BB0000] to-[#006600] text-white">

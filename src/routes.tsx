@@ -1,50 +1,57 @@
 import { RouteObject } from 'react-router-dom';
-import { lazy } from 'react';
+import { lazy, Suspense } from 'react';
 import { Loading } from '@/components/Loading';
 import { Layout } from "@/components/Layout";
 
 // Lazy load components
-const LandingPage = lazy(() => import('./pages/LandingPage'));
-const Counties = lazy(() => import('./pages/Counties'));
-const Bills = lazy(() => import('./pages/Bills'));
-const Statistics = lazy(() => import('./pages/Statistics'));
-const NotFound = lazy(() => import('./pages/NotFound'));
+const LandingPage = lazy(() => import('./pages/LandingPage').then(m => ({ default: m.LandingPage })));
+const Counties = lazy(() => import('./pages/Counties').then(m => ({ default: m.Counties })));
+const Bills = lazy(() => import('./pages/Bills').then(m => ({ default: m.Bills })));
+const Statistics = lazy(() => import('./pages/Statistics').then(m => ({ default: m.Statistics })));
+const NotFound = lazy(() => import('./pages/NotFound').then(m => ({ default: m.NotFound })));
+
+// Wrap components with Suspense
+const withSuspense = (Component: React.ComponentType) => (
+  <Suspense fallback={<Loading />}>
+    <Component />
+  </Suspense>
+);
 
 // Define routes with proper configuration
 export const routes: RouteObject[] = [
   {
     path: "/",
     element: <Layout />,
-    errorElement: <NotFound />,
+    errorElement: withSuspense(NotFound),
     children: [
       {
         index: true,
-        element: <LandingPage />,
+        element: withSuspense(LandingPage),
       },
       {
         path: "counties",
-        element: <Counties />,
+        element: withSuspense(Counties),
       },
       {
         path: "bills",
         children: [
           {
             index: true,
-            element: <Bills />,
+            element: withSuspense(Bills),
           },
           {
             path: "national",
-            element: <Bills />,
+            element: withSuspense(Bills),
           }
         ]
       },
       {
         path: "statistics",
-        element: <Statistics />,
+        element: withSuspense(Statistics),
       },
       {
         path: "*",
-        element: <NotFound />,
+        element: withSuspense(NotFound),
       }
     ],
   },
