@@ -111,6 +111,7 @@
   backface-visibility: hidden;
   perspective: 1000px;
   transform-style: preserve-3d;
+  transition: all 0.2s ease-in-out;
 }
 
 .county-popup {
@@ -122,12 +123,14 @@
   contain: layout style paint;
   will-change: transform;
   transform: translate3d(0, 0, 0);
+  z-index: 1000;
 }
 
 .county-popup .mapboxgl-popup-content {
   border-radius: 8px;
-  padding: 12px;
+  padding: 0;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  border: 1px solid #e2e8f0;
   contain: layout style paint;
   will-change: transform;
   transform: translate3d(0, 0, 0);
@@ -136,6 +139,7 @@
 .county-popup .mapboxgl-popup-tip {
   border-top-color: white;
   filter: drop-shadow(0 1px 1px rgba(0,0,0,0.1));
+  display: none;
 }
 
 .mapboxgl-ctrl-group {
