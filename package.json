@@ -9,7 +9,7 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
-    "vercel-build": "npm install && tsc && vite build"
+    "vercel-build": "vite build"
   },
   "dependencies": {
     "@fontsource/inter": "^5.1.0",
