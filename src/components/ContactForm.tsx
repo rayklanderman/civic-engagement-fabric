@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
+import { submitContactForm } from "@/api/contact";
 
 export function ContactForm() {
   const [formData, setFormData] = useState({
@@ -11,16 +12,29 @@ export function ContactForm() {
     email: "",
     message: "",
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Here you would typically send the form data to your backend
-    console.log("Form submitted:", formData);
-    toast({
-      title: "Message Sent!",
-      description: "Thank you for your message. We'll get back to you soon.",
-    });
-    setFormData({ name: "", email: "", message: "" });
+    setIsSubmitting(true);
+    
+    try {
+      await submitContactForm(formData);
+      toast({
+        title: "Message Sent!",
+        description: "Thank you for your message. We'll get back to you soon.",
+      });
+      setFormData({ name: "", email: "", message: "" });
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      toast({
+        title: "Error",
+        description: "There was an error sending your message. Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleChange = (
@@ -48,6 +62,7 @@ export function ContactForm() {
             onChange={handleChange}
             required
             placeholder="Your name"
+            disabled={isSubmitting}
           />
         </div>
         <div>
@@ -62,6 +77,7 @@ export function ContactForm() {
             onChange={handleChange}
             required
             placeholder="your.email@example.com"
+            disabled={isSubmitting}
           />
         </div>
         <div>
@@ -76,10 +92,15 @@ export function ContactForm() {
             required
             placeholder="Your message..."
             className="min-h-[100px]"
+            disabled={isSubmitting}
           />
         </div>
-        <Button type="submit" className="w-full bg-green-700 hover:bg-green-800">
-          Send Message
+        <Button 
+          type="submit" 
+          className="w-full bg-green-700 hover:bg-green-800"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? "Sending..." : "Send Message"}
         </Button>
       </form>
     </Card>

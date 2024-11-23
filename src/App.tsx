@@ -5,6 +5,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { routes } from './routes';
 import { useEffect } from 'react';
 import './styles/map.css';
+import { TestConnection } from '@/components/TestConnection';
 
 const queryClient = new QueryClient();
 
@@ -64,6 +65,7 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
+        {import.meta.env.DEV && <TestConnection />}
         <RouterProvider router={router} />
       </TooltipProvider>
     </QueryClientProvider>
