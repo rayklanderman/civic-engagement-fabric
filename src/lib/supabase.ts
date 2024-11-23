@@ -1,10 +1,20 @@
 import { createClient } from '@supabase/supabase-js'
 
-// Ensure URLs are properly formatted
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL?.trim() || ''
+// Debug: Log environment variables
+console.log('Environment variables:', {
+  VITE_SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL,
+  // Don't log the actual key in production
+  HAS_ANON_KEY: !!import.meta.env.VITE_SUPABASE_ANON_KEY
+})
+
+// Ensure URLs are properly formatted with protocol
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL?.trim()
+  ? `https://${import.meta.env.VITE_SUPABASE_URL?.trim().replace(/^https?:\/\//, '')}`
+  : ''
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY?.trim() || ''
 
 if (!supabaseUrl || !supabaseAnonKey) {
+  console.error('Missing Supabase environment variables:', { supabaseUrl, hasAnonKey: !!supabaseAnonKey })
   throw new Error('Missing Supabase environment variables')
 }
 
