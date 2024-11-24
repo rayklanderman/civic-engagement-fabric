@@ -5,21 +5,21 @@ export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
-    <header className="bg-kenya-black text-kenya-white shadow-lg">
+    <header className="bg-white shadow-sm">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
-          <Link to="/" className="text-2xl font-bold hover:text-kenya-red transition-colors">
+          <Link to="/" className="text-2xl font-bold text-[#006600] hover:text-[#005500] transition-colors">
             Sauti ya Wananchi
           </Link>
 
           {/* Mobile menu button */}
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="md:hidden p-2 rounded-md hover:bg-kenya-red transition-colors"
+            className="md:hidden p-2 rounded-md hover:bg-gray-100 transition-colors"
             aria-label="Toggle menu"
           >
             <svg
-              className="h-6 w-6"
+              className="h-6 w-6 text-gray-600"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -52,17 +52,19 @@ export function Header() {
 
         {/* Mobile navigation */}
         {isMenuOpen && (
-          <nav className="md:hidden py-4 space-y-4">
-            <NavLink mobile to="/counties" onClick={() => setIsMenuOpen(false)}>
-              Counties
-            </NavLink>
-            <NavLink mobile to="/bills" onClick={() => setIsMenuOpen(false)}>
-              Bills
-            </NavLink>
-            <NavLink mobile to="/statistics" onClick={() => setIsMenuOpen(false)}>
-              Statistics
-            </NavLink>
-          </nav>
+          <div className="md:hidden py-4">
+            <nav className="flex flex-col space-y-4">
+              <NavLink to="/counties" mobile onClick={() => setIsMenuOpen(false)}>
+                Counties
+              </NavLink>
+              <NavLink to="/bills" mobile onClick={() => setIsMenuOpen(false)}>
+                Bills
+              </NavLink>
+              <NavLink to="/statistics" mobile onClick={() => setIsMenuOpen(false)}>
+                Statistics
+              </NavLink>
+            </nav>
+          </div>
         )}
       </div>
     </header>
@@ -77,16 +79,13 @@ interface NavLinkProps {
 }
 
 function NavLink({ to, children, mobile, onClick }: NavLinkProps) {
-  const baseClasses = "font-medium transition-colors hover:text-kenya-red";
-  const mobileClasses = mobile
-    ? "block py-2"
-    : "inline-block";
-
   return (
     <Link
       to={to}
-      className={`${baseClasses} ${mobileClasses}`}
       onClick={onClick}
+      className={`text-gray-800 hover:text-[#006600] transition-colors ${
+        mobile ? 'text-lg' : 'font-medium'
+      }`}
     >
       {children}
     </Link>

@@ -125,17 +125,6 @@ export function LandingPage() {
         </section>
       </main>
 
-      {/* Footer */}
-      <footer className="w-full py-6 bg-black text-white">
-        <div className="container px-4 md:px-6">
-          <div className="flex flex-col items-center justify-center space-y-4 text-center">
-            <p className="text-sm text-gray-300">
-              &copy; 2024 Sauti ya Wananchi. All rights reserved.
-            </p>
-          </div>
-        </div>
-      </footer>
-
       <BillsSelectionDialog
         isOpen={billsDialogOpen}
         onClose={() => setBillsDialogOpen(false)}
