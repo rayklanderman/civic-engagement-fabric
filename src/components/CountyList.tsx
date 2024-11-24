@@ -1,33 +1,42 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Card } from './ui/card';
 import { Input } from './ui/input';
 import { ScrollArea } from './ui/scroll-area';
 import { kenyaCountiesGeoJSON } from '@/lib/counties';
 import { cn } from '@/lib/utils';
+import { County } from '@/types';
 
-export const CountyList = () => {
-  const navigate = useNavigate();
+interface CountyListProps {
+  selectedCounty: County | null;
+  onSelectCounty: (county: County) => void;
+}
+
+export function CountyList({ selectedCounty, onSelectCounty }: CountyListProps) {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCounty, setSelectedCounty] = useState<string | null>(null);
 
   // Sort counties alphabetically
   const counties = kenyaCountiesGeoJSON.features
-    .map(county => county.properties.name)
-    .sort((a, b) => a.localeCompare(b));
+    .map(county => ({
+      id: county.properties.id,
+      name: county.properties.name,
+      capital: county.properties.capital,
+      population: county.properties.population,
+      area: county.properties.area,
+      governor: county.properties.governor,
+      coordinates: {
+        lat: county.geometry.coordinates[1],
+        lng: county.geometry.coordinates[0]
+      }
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name));
 
   // Filter counties based on search
   const filteredCounties = counties.filter(county =>
-    county.toLowerCase().includes(searchTerm.toLowerCase())
+    county.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleCountyClick = (county: string) => {
-    setSelectedCounty(county);
-    navigate(`/bills?county=${encodeURIComponent(county)}`);
-  };
-
   return (
-    <Card className="w-full max-w-sm p-4 shadow-lg">
+    <Card className="w-full p-4 shadow-lg">
       <div className="space-y-4">
         <Input
           type="search"
@@ -40,15 +49,15 @@ export const CountyList = () => {
           <div className="space-y-2">
             {filteredCounties.map((county) => (
               <button
-                key={county}
-                onClick={() => handleCountyClick(county)}
+                key={county.id}
+                onClick={() => onSelectCounty(county)}
                 className={cn(
                   'w-full text-left px-4 py-2 rounded-lg transition-colors',
                   'hover:bg-gray-100 dark:hover:bg-gray-800',
-                  selectedCounty === county && 'bg-primary text-primary-foreground'
+                  selectedCounty?.id === county.id && 'bg-primary text-primary-foreground'
                 )}
               >
-                {county}
+                {county.name}
               </button>
             ))}
           </div>
@@ -56,4 +65,4 @@ export const CountyList = () => {
       </div>
     </Card>
   );
-};
+}

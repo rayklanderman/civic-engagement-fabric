@@ -4,8 +4,12 @@ export const kenyaCountiesGeoJSON = {
     {
       type: "Feature",
       properties: {
+        id: 47,
         name: "Nairobi",
-        id: "nairobi"
+        capital: "Nairobi City",
+        population: 4397073,
+        area: 696,
+        governor: "Johnson Sakaja"
       },
       geometry: {
         type: "Point",
@@ -15,8 +19,12 @@ export const kenyaCountiesGeoJSON = {
     {
       type: "Feature",
       properties: {
+        id: 1,
         name: "Mombasa",
-        id: "mombasa"
+        capital: "Mombasa City",
+        population: 1208333,
+        area: 229.9,
+        governor: "Abdulswamad Nassir"
       },
       geometry: {
         type: "Point",
@@ -26,8 +34,12 @@ export const kenyaCountiesGeoJSON = {
     {
       type: "Feature",
       properties: {
+        id: 42,
         name: "Kisumu",
-        id: "kisumu"
+        capital: "Kisumu City",
+        population: 1155574,
+        area: 2085.9,
+        governor: "Anyang' Nyong'o"
       },
       geometry: {
         type: "Point",
@@ -37,8 +49,12 @@ export const kenyaCountiesGeoJSON = {
     {
       type: "Feature",
       properties: {
+        id: 32,
         name: "Nakuru",
-        id: "nakuru"
+        capital: "Nakuru City",
+        population: 2162202,
+        area: 7495.1,
+        governor: "Susan Kihika"
       },
       geometry: {
         type: "Point",
@@ -48,12 +64,31 @@ export const kenyaCountiesGeoJSON = {
     {
       type: "Feature",
       properties: {
+        id: 27,
         name: "Uasin Gishu",
-        id: "uasin-gishu"
+        capital: "Eldoret",
+        population: 1163186,
+        area: 3345.2,
+        governor: "Jonathan Bii"
       },
       geometry: {
         type: "Point",
-        coordinates: [35.2699, 0.5143]
+        coordinates: [35.2697, 0.5143]
+      }
+    },
+    {
+      type: "Feature",
+      properties: {
+        id: 11,
+        name: "Isiolo",
+        capital: "Isiolo",
+        population: 268002,
+        area: 25336.1,
+        governor: "Abdi Hassan Guyo"
+      },
+      geometry: {
+        type: "Point",
+        coordinates: [38.4856, 1.3554]
       }
     },
     {
@@ -263,17 +298,6 @@ export const kenyaCountiesGeoJSON = {
       geometry: {
         type: "Point",
         coordinates: [40.0573, 1.7471]
-      }
-    },
-    {
-      type: "Feature",
-      properties: {
-        name: "Isiolo",
-        id: "isiolo"
-      },
-      geometry: {
-        type: "Point",
-        coordinates: [37.5833, 0.3500]
       }
     },
     {
