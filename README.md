@@ -1,8 +1,32 @@
-# Welcome to your Lovable project
+# Civic Engagement Fabric
 
-## Project info
+A modern, interactive platform designed to enhance civic participation and community engagement through technology.
 
-**URL**: https://lovable.dev/projects/7a22c0d1-d7e0-4d75-b858-9a94e21a49d9
+## About The Project
+
+Civic Engagement Fabric is a comprehensive web application that bridges the gap between citizens and their local government, facilitating meaningful civic participation and community involvement.
+
+### Key Features and Advantages
+
+- **Interactive County Map**: Visual representation of civic activities and engagement across different counties
+- **Real-time Updates**: Stay informed about local civic events and initiatives
+- **Cross-platform Compatibility**: Access the platform from any device
+- **User-friendly Interface**: Built with modern UI/UX principles for seamless navigation
+- **Data-driven Insights**: Visualize and understand civic engagement patterns
+- **Secure and Scalable**: Built with robust security measures and scalable architecture
+
+## Technology Stack
+
+### Frontend
+- React with TypeScript
+- Tailwind CSS for styling
+- shadcn-ui for component library
+- Vite for build tooling
+
+### Backend
+- Python for server-side logic
+- FastAPI for API development
+- PostgreSQL with Supabase for database management
 
 ## How can I edit this code?
 
@@ -50,20 +74,14 @@ npm run dev
 - Click on "New codespace" to launch a new Codespace environment.
 - Edit files directly within the Codespace and commit and push your changes once you're done.
 
-## What technologies are used for this project?
-
-This project is built with .
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
+## Deployment
 
 Simply open [Lovable](https://lovable.dev/projects/7a22c0d1-d7e0-4d75-b858-9a94e21a49d9) and click on Share -> Publish.
 
-## I want to use a custom domain - is that possible?
+## Contributing
 
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+We welcome contributions to the Civic Engagement Fabric project! Please feel free to submit issues and pull requests.
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
