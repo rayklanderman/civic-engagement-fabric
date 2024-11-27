@@ -1,7 +1,7 @@
 # Civic Engagement Fabric
 
 ## Live Demo
-Visit our platform at: [Civic Engagement Fabric](https://civic-engagement-fabric.vercel.app/)
+Visit our platform at: [Civic Engagement Fabric](https://civic-engagement-fabric-one.vercel.app/)
 
 ## About The Project
 
@@ -37,7 +37,7 @@ To empower citizens with tools and information that facilitate active participat
 
 ## Getting Started
 
-Visit [Civic Engagement Fabric](https://civic-engagement-fabric.vercel.app/) to start participating in your local government's decision-making process.
+Visit [Civic Engagement Fabric](https://civic-engagement-fabric-one.vercel.app/) to start participating in your local government's decision-making process.
 
 ## Contributing
 
