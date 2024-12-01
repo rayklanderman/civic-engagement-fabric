@@ -1,13 +1,12 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useSearchParams } from "react-router-dom";
+import { useToast } from "@/components/ui/use-toast";
+import { useQuery } from "@tanstack/react-query";
+import { useState, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { useState } from "react";
-import { useToast } from "@/components/ui/use-toast";
-import { useQuery } from "@tanstack/react-query";
 
 interface Bill {
   id: string;
@@ -16,6 +15,18 @@ interface Bill {
   county: string;
   deadline: string;
   isNational?: boolean;
+}
+
+interface ParticipationFormData {
+  name: string;
+  email: string;
+  phoneNumber: string;
+  idNumber: string;
+  comment: string;
+}
+
+interface BillsListProps {
+  countyId?: string | null;
 }
 
 // Simulated API call - In a real app, this would fetch from your backend
@@ -56,17 +67,7 @@ const fetchBills = async (): Promise<Bill[]> => {
   ];
 };
 
-interface ParticipationFormData {
-  name: string;
-  email: string;
-  phoneNumber: string;
-  idNumber: string;
-  comment: string;
-}
-
-export function BillsList() {
-  const [searchParams] = useSearchParams();
-  const selectedCounty = searchParams.get("county");
+export function BillsList({ countyId }: BillsListProps) {
   const { toast } = useToast();
   const [selectedBill, setSelectedBill] = useState<Bill | null>(null);
   const [formData, setFormData] = useState<ParticipationFormData>({
@@ -83,12 +84,24 @@ export function BillsList() {
     queryFn: fetchBills,
   });
 
-  const filteredBills = selectedCounty
-    ? bills.filter(bill => 
-        bill.county === selectedCounty || 
-        (bill.isNational && !bills.some(b => b.county === selectedCounty && !b.isNational))
-      )
-    : bills;
+  // Filter bills based on county
+  const filteredBills = useMemo(() => {
+    if (!countyId) {
+      return bills; // Show all bills on the main bills page
+    }
+
+    const countyBills = bills.filter(bill => 
+      bill.county === countyId || bill.isNational
+    );
+
+    // If there are county-specific bills, show them along with national bills
+    // If no county-specific bills exist, show only national bills
+    const hasCountySpecificBills = countyBills.some(bill => !bill.isNational && bill.county === countyId);
+    
+    return hasCountySpecificBills 
+      ? countyBills 
+      : bills.filter(bill => bill.isNational);
+  }, [bills, countyId]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -123,7 +136,7 @@ export function BillsList() {
   return (
     <div className="space-y-4">
       <h2 className="text-2xl font-semibold">
-        {selectedCounty ? `Bills for ${selectedCounty} County` : "All Current Bills"}
+        {countyId ? `Bills for ${countyId} County` : "All Current Bills"}
       </h2>
       {filteredBills.length === 0 ? (
         <Card className="p-6">

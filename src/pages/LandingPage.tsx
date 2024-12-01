@@ -56,7 +56,7 @@ export function LandingPage() {
                 <div className="flex flex-col gap-2 min-[400px]:flex-row">
                   <Button
                     className="inline-flex bg-[#006600] hover:bg-[#005500] text-white"
-                    onClick={() => navigate('/map')}
+                    onClick={() => navigate('/counties')}
                   >
                     Open Map
                   </Button>
@@ -77,7 +77,7 @@ export function LandingPage() {
                 <div className="flex flex-col gap-2 min-[400px]:flex-row">
                   <Button
                     className="inline-flex bg-[#006600] hover:bg-[#005500] text-white"
-                    onClick={() => setCountyDialogOpen(true)}
+                    onClick={() => navigate('/counties')}
                   >
                     Participate Now
                   </Button>
