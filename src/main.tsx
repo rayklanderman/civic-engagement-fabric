@@ -16,7 +16,15 @@ const queryClient = new QueryClient({
   },
 })
 
-const router = createBrowserRouter(routes)
+const router = createBrowserRouter(routes, {
+  future: {
+    v7_fetcherPersist: true,
+    v7_normalizeFormMethod: true,
+    v7_partialHydration: true,
+    v7_skipActionErrorRevalidation: true,
+    v7_startTransition: true
+  }
+})
 
 const root = document.getElementById('root')
 if (!root) throw new Error('Root element not found')
@@ -27,9 +35,6 @@ createRoot(root).render(
       <Suspense fallback={<Loading />}>
         <RouterProvider 
           router={router} 
-          future={{ 
-            v7_startTransition: true 
-          }} 
         />
       </Suspense>
     </QueryClientProvider>
