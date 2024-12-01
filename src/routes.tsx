@@ -40,6 +40,10 @@ export const routes: RouteObject[] = [
             element: withSuspense(Bills)({})
           },
           {
+            path: ":countyId",
+            element: withSuspense(Bills)({})
+          },
+          {
             path: "national",
             element: withSuspense(Bills)({})
           }

@@ -7,8 +7,17 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BillsList } from "@/components/BillsList";
+import { useParams } from 'react-router-dom';
+import { kenyaCountiesGeoJSON } from '@/lib/counties';
 
 export function Bills() {
+  const { countyId } = useParams();
+  
+  // Find the selected county if countyId is provided
+  const selectedCounty = countyId 
+    ? kenyaCountiesGeoJSON.features.find(county => county.properties.id === countyId)?.properties
+    : null;
+
   const [searchTerm, setSearchTerm] = useState("");
   const [filter, setFilter] = useState("all");
 
@@ -39,7 +48,9 @@ export function Bills() {
     <div className="min-h-screen flex flex-col">
       <main className="flex-1 container mx-auto px-4 py-8">
         <div className="flex flex-col md:flex-row justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-[#BB0000] mb-4 md:mb-0">Legislative Bills</h1>
+          <h1 className="text-3xl font-bold text-[#BB0000] mb-4 md:mb-0">
+            {selectedCounty ? `Bills for ${selectedCounty.name} County` : 'Legislative Bills'}
+          </h1>
           <div className="flex gap-4 w-full md:w-auto">
             <Input
               type="search"
@@ -71,7 +82,7 @@ export function Bills() {
             <p className="text-gray-500">No bills found matching your criteria.</p>
           </div>
         ) : (
-          <BillsList bills={filteredBills} />
+          <BillsList bills={filteredBills} countyId={countyId} />
         )}
       </main>
     </div>

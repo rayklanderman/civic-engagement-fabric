@@ -2,9 +2,17 @@ import { CountyMap } from "@/components/CountyMap";
 import { CountyList } from "@/components/CountyList";
 import { useState } from "react";
 import { County } from "@/types";
+import { useNavigate } from "react-router-dom";
 
 export function Counties() {
   const [selectedCounty, setSelectedCounty] = useState<County | null>(null);
+  const navigate = useNavigate();
+
+  const handleCountySelect = (county: County) => {
+    setSelectedCounty(county);
+    // Navigate to the bills page with the county ID
+    navigate(`/bills/${county.id}`);
+  };
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -15,7 +23,7 @@ export function Counties() {
         <div className="lg:col-span-1 bg-white rounded-lg shadow-md p-4">
           <CountyList 
             selectedCounty={selectedCounty} 
-            onSelectCounty={setSelectedCounty} 
+            onSelectCounty={handleCountySelect} 
           />
         </div>
 
@@ -24,7 +32,7 @@ export function Counties() {
           <div className="h-[600px]">
             <CountyMap 
               selectedCounty={selectedCounty} 
-              onSelectCounty={setSelectedCounty} 
+              onSelectCounty={handleCountySelect} 
             />
           </div>
         </div>
@@ -46,21 +54,6 @@ export function Counties() {
             <div>
               <h3 className="font-semibold mb-2">Area</h3>
               <p>{selectedCounty.area.toLocaleString()} km²</p>
-            </div>
-            <div className="md:col-span-2 lg:col-span-3">
-              <h3 className="font-semibold mb-2">Recent Bills</h3>
-              {selectedCounty.bills?.length > 0 ? (
-                <ul className="list-disc pl-5">
-                  {selectedCounty.bills.map((bill, index) => (
-                    <li key={index} className="mb-2">
-                      <span className="font-medium">{bill.title}</span>
-                      <p className="text-sm text-gray-600">{bill.description}</p>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-gray-500">No recent bills found.</p>
-              )}
             </div>
           </div>
         </div>
