@@ -14,6 +14,11 @@ interface CountyListProps {
 export function CountyList({ selectedCounty, onSelectCounty }: CountyListProps) {
   const [searchTerm, setSearchTerm] = useState('');
 
+  // Add a safe format function
+  const formatNumber = (num: number | undefined | null) => {
+    return num ? num.toLocaleString() : 'N/A';
+  };
+
   // Sort counties alphabetically
   const counties = kenyaCountiesGeoJSON.features
     .map(county => ({
@@ -57,7 +62,15 @@ export function CountyList({ selectedCounty, onSelectCounty }: CountyListProps) 
                   selectedCounty?.id === county.id && 'bg-primary text-primary-foreground'
                 )}
               >
-                {county.name}
+                <div className="flex flex-col">
+                  <span className="font-semibold">{county.name}</span>
+                  <span className="text-sm text-gray-500">
+                    Population: {formatNumber(county.population)}
+                  </span>
+                  <span className="text-sm text-gray-500">
+                    Area: {formatNumber(county.area)} km²
+                  </span>
+                </div>
               </button>
             ))}
           </div>

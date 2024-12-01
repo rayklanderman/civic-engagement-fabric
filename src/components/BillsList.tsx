@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useSearchParams } from "react-router-dom";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -155,9 +155,15 @@ export function BillsList() {
                 <DialogTrigger asChild>
                   <Button onClick={() => handleParticipateClick(bill)}>Participate</Button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-[500px]">
+                <DialogContent 
+                  className="sm:max-w-[500px]"
+                  aria-describedby="bill-participation-description"
+                >
                   <DialogHeader>
                     <DialogTitle>Participate in Bill Review</DialogTitle>
+                    <DialogDescription id="bill-participation-description">
+                      Share your feedback on this bill
+                    </DialogDescription>
                   </DialogHeader>
                   <form onSubmit={handleSubmit} className="space-y-4 mt-4">
                     <div className="space-y-2">

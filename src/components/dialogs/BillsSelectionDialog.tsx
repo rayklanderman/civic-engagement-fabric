@@ -28,10 +28,13 @@ export function BillsSelectionDialog({ isOpen, onClose }: BillsSelectionDialogPr
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent 
+        className="sm:max-w-[425px]"
+        aria-describedby="bill-selection-description"
+      >
         <DialogHeader>
           <DialogTitle>Select Bill Type</DialogTitle>
-          <DialogDescription>
+          <DialogDescription id="bill-selection-description">
             Choose to view National Bills or County-specific Bills
           </DialogDescription>
         </DialogHeader>

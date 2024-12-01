@@ -43,10 +43,13 @@ export function CountySelectionDialog({ isOpen, onClose }: CountySelectionDialog
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent 
+        className="sm:max-w-[425px]"
+        aria-describedby="county-selection-description"
+      >
         <DialogHeader>
           <DialogTitle>Select County</DialogTitle>
-          <DialogDescription>
+          <DialogDescription id="county-selection-description">
             Choose a county to view its public participation opportunities
           </DialogDescription>
         </DialogHeader>
