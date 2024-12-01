@@ -15,7 +15,7 @@ interface Bill {
   county: string;
   deadline: string;
   isNational: boolean;
-  status: string;
+  status: 'active' | 'pending' | 'closed';
 }
 
 interface ParticipationFormData {
@@ -54,7 +54,7 @@ const fetchBills = async (): Promise<Bill[]> => {
       county: "Mombasa",
       deadline: "2024-04-15",
       isNational: false,
-      status: 'approved'
+      status: 'active'
     },
     {
       id: "3",
@@ -72,7 +72,7 @@ const fetchBills = async (): Promise<Bill[]> => {
       county: "National",
       deadline: "2024-06-30",
       isNational: true,
-      status: 'approved'
+      status: 'active'
     },
     {
       id: "5",
@@ -98,37 +98,49 @@ export function BillsList({ countyName, searchTerm, filter }: BillsListProps) {
   });
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const { data: bills = [], isLoading } = useQuery({
+  const { data: bills = [], isLoading, isError } = useQuery<Bill[]>({
     queryKey: ['bills'],
     queryFn: fetchBills,
   });
 
   // Filter bills based on county, search term, and filter
   const filteredBills = useMemo(() => {
-    let filtered = bills;
+    if (!bills) return [];
+    
+    return bills.filter(bill => {
+      // County filter
+      if (countyName) {
+        const normalizedCountyName = countyName.toLowerCase();
+        const normalizedBillCounty = bill.county.toLowerCase();
+        if (!bill.isNational && normalizedBillCounty !== normalizedCountyName) {
+          return false;
+        }
+      }
 
-    // Filter by county
-    if (countyName) {
-      filtered = bills.filter(bill => 
-        bill.isNational || bill.county.toLowerCase() === countyName.toLowerCase()
-      );
-    }
+      // Search term filter
+      if (searchTerm) {
+        const normalizedSearch = searchTerm.toLowerCase();
+        if (!bill.title.toLowerCase().includes(normalizedSearch) &&
+            !bill.description.toLowerCase().includes(normalizedSearch)) {
+          return false;
+        }
+      }
 
-    // Apply search term filter
-    if (searchTerm) {
-      filtered = filtered.filter(bill =>
-        bill.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        bill.description.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
+      // Status filter
+      if (filter && filter !== 'all') {
+        if (bill.status !== filter) {
+          return false;
+        }
+      }
 
-    // Apply status filter
-    if (filter !== 'all') {
-      filtered = filtered.filter(bill => bill.status === filter);
-    }
-
-    return filtered;
+      return true;
+    });
   }, [bills, countyName, searchTerm, filter]);
+
+  const handleParticipate = (bill: Bill) => {
+    setSelectedBill(bill);
+    setIsDialogOpen(true);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -149,8 +161,19 @@ export function BillsList({ countyName, searchTerm, filter }: BillsListProps) {
 
   if (isLoading) {
     return (
+      <div className="space-y-4">
+        <Card className="p-6 animate-pulse">
+          <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
+          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+        </Card>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
       <Card className="p-6">
-        <p className="text-gray-500">Loading bills...</p>
+        <p className="text-red-500">Error loading bills. Please try again later.</p>
       </Card>
     );
   }
@@ -183,7 +206,11 @@ export function BillsList({ countyName, searchTerm, filter }: BillsListProps) {
                     Type: {bill.isNational ? "National Bill" : "County Bill"}
                   </p>
                   <p className="text-sm text-gray-500">
-                    Status: {bill.status}
+                    Status: <span className={
+                      bill.status === 'active' ? 'text-green-500' :
+                      bill.status === 'pending' ? 'text-yellow-500' :
+                      'text-red-500'
+                    }>{bill.status}</span>
                   </p>
                 </div>
               </div>
