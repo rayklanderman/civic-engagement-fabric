@@ -76,5 +76,8 @@
     "typescript": "^5.3.3",
     "vite": "^5.0.10",
     "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "favicons": "7.2.0"
   }
 }
