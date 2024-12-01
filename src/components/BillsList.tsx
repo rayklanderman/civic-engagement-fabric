@@ -14,7 +14,8 @@ interface Bill {
   description: string;
   county: string;
   deadline: string;
-  isNational?: boolean;
+  isNational: boolean;
+  status: string;
 }
 
 interface ParticipationFormData {
@@ -26,7 +27,9 @@ interface ParticipationFormData {
 }
 
 interface BillsListProps {
-  countyId?: string | null;
+  countyName: string | null;
+  searchTerm: string;
+  filter: string;
 }
 
 // Simulated API call - In a real app, this would fetch from your backend
@@ -41,6 +44,8 @@ const fetchBills = async (): Promise<Bill[]> => {
       description: "Proposed financial allocations for the fiscal year 2024/2025",
       county: "Nairobi",
       deadline: "2024-03-30",
+      isNational: false,
+      status: 'pending'
     },
     {
       id: "2",
@@ -48,6 +53,8 @@ const fetchBills = async (): Promise<Bill[]> => {
       description: "Regulations for private and public healthcare facilities",
       county: "Mombasa",
       deadline: "2024-04-15",
+      isNational: false,
+      status: 'approved'
     },
     {
       id: "3",
@@ -55,6 +62,8 @@ const fetchBills = async (): Promise<Bill[]> => {
       description: "Regulations for environmental protection and conservation",
       county: "Kisumu",
       deadline: "2024-05-01",
+      isNational: false,
+      status: 'pending'
     },
     {
       id: "4",
@@ -63,11 +72,21 @@ const fetchBills = async (): Promise<Bill[]> => {
       county: "National",
       deadline: "2024-06-30",
       isNational: true,
+      status: 'approved'
+    },
+    {
+      id: "5",
+      title: "National Healthcare Reform Bill 2024",
+      description: "Comprehensive healthcare system reforms across Kenya",
+      county: "National",
+      deadline: "2024-07-15",
+      isNational: true,
+      status: 'pending'
     }
   ];
 };
 
-export function BillsList({ countyId }: BillsListProps) {
+export function BillsList({ countyName, searchTerm, filter }: BillsListProps) {
   const { toast } = useToast();
   const [selectedBill, setSelectedBill] = useState<Bill | null>(null);
   const [formData, setFormData] = useState<ParticipationFormData>({
@@ -84,24 +103,32 @@ export function BillsList({ countyId }: BillsListProps) {
     queryFn: fetchBills,
   });
 
-  // Filter bills based on county
+  // Filter bills based on county, search term, and filter
   const filteredBills = useMemo(() => {
-    if (!countyId) {
-      return bills; // Show all bills on the main bills page
+    let filtered = bills;
+
+    // Filter by county
+    if (countyName) {
+      filtered = bills.filter(bill => 
+        bill.isNational || bill.county.toLowerCase() === countyName.toLowerCase()
+      );
     }
 
-    const countyBills = bills.filter(bill => 
-      bill.county === countyId || bill.isNational
-    );
+    // Apply search term filter
+    if (searchTerm) {
+      filtered = filtered.filter(bill =>
+        bill.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        bill.description.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
 
-    // If there are county-specific bills, show them along with national bills
-    // If no county-specific bills exist, show only national bills
-    const hasCountySpecificBills = countyBills.some(bill => !bill.isNational && bill.county === countyId);
-    
-    return hasCountySpecificBills 
-      ? countyBills 
-      : bills.filter(bill => bill.isNational);
-  }, [bills, countyId]);
+    // Apply status filter
+    if (filter !== 'all') {
+      filtered = filtered.filter(bill => bill.status === filter);
+    }
+
+    return filtered;
+  }, [bills, countyName, searchTerm, filter]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -120,11 +147,6 @@ export function BillsList({ countyId }: BillsListProps) {
     });
   };
 
-  const handleParticipateClick = (bill: Bill) => {
-    setSelectedBill(bill);
-    setIsDialogOpen(true);
-  };
-
   if (isLoading) {
     return (
       <Card className="p-6">
@@ -136,29 +158,33 @@ export function BillsList({ countyId }: BillsListProps) {
   return (
     <div className="space-y-4">
       <h2 className="text-2xl font-semibold">
-        {countyId ? `Bills for ${countyId} County` : "All Current Bills"}
+        {countyName ? `Bills for ${countyName} County` : "All Current Bills"}
       </h2>
       {filteredBills.length === 0 ? (
         <Card className="p-6">
-          <p className="text-gray-500">No bills found for this county.</p>
+          <p className="text-center text-gray-500">
+            {countyName 
+              ? "Only national bills are available for this county at the moment."
+              : "No bills found."}
+          </p>
         </Card>
       ) : (
-        filteredBills.map((bill: Bill) => (
-          <Card key={bill.id} className="p-6">
-            <div className="flex justify-between items-start">
-              <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="text-xl font-semibold">{bill.title}</h3>
-                  {bill.isNational && (
-                    <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
-                      National Bill
-                    </span>
-                  )}
-                </div>
-                <p className="text-gray-600 mt-2">{bill.description}</p>
-                <div className="mt-4 flex items-center space-x-4 text-sm text-gray-500">
-                  <span>County: {bill.county}</span>
-                  <span>Deadline: {bill.deadline}</span>
+        <div className="grid gap-4">
+          {filteredBills.map((bill) => (
+            <Card key={bill.id} className="p-6">
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h3 className="text-xl font-semibold mb-2">{bill.title}</h3>
+                  <p className="text-gray-600 mb-2">{bill.description}</p>
+                  <p className="text-sm text-gray-500">
+                    Deadline: {new Date(bill.deadline).toLocaleDateString()}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    Type: {bill.isNational ? "National Bill" : "County Bill"}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    Status: {bill.status}
+                  </p>
                 </div>
               </div>
               <Dialog open={isDialogOpen && selectedBill?.id === bill.id} onOpenChange={(open) => {
@@ -166,78 +192,88 @@ export function BillsList({ countyId }: BillsListProps) {
                 if (!open) setSelectedBill(null);
               }}>
                 <DialogTrigger asChild>
-                  <Button onClick={() => handleParticipateClick(bill)}>Participate</Button>
+                  <Button
+                    onClick={() => {
+                      setSelectedBill(bill);
+                      setIsDialogOpen(true);
+                    }}
+                  >
+                    Participate
+                  </Button>
                 </DialogTrigger>
-                <DialogContent 
-                  className="sm:max-w-[500px]"
-                  aria-describedby="bill-participation-description"
-                >
+                <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Participate in Bill Review</DialogTitle>
-                    <DialogDescription id="bill-participation-description">
-                      Share your feedback on this bill
+                    <DialogTitle>Submit Your Feedback</DialogTitle>
+                    <DialogDescription>
+                      Provide your input on {selectedBill?.title}
                     </DialogDescription>
                   </DialogHeader>
-                  <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+                  <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="name">Full Name *</Label>
+                      <Label htmlFor="name">Name</Label>
                       <Input
                         id="name"
                         required
                         value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        placeholder="Enter your full name"
+                        onChange={(e) =>
+                          setFormData({ ...formData, name: e.target.value })
+                        }
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="idNumber">ID Number *</Label>
-                      <Input
-                        id="idNumber"
-                        required
-                        value={formData.idNumber}
-                        onChange={(e) => setFormData({ ...formData, idNumber: e.target.value })}
-                        placeholder="Enter your ID number"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email Address *</Label>
+                      <Label htmlFor="email">Email</Label>
                       <Input
                         id="email"
                         type="email"
                         required
                         value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        placeholder="Enter your email address"
+                        onChange={(e) =>
+                          setFormData({ ...formData, email: e.target.value })
+                        }
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="phone">Phone Number *</Label>
+                      <Label htmlFor="phoneNumber">Phone Number</Label>
                       <Input
-                        id="phone"
+                        id="phoneNumber"
                         required
                         value={formData.phoneNumber}
-                        onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
-                        placeholder="Enter your phone number"
+                        onChange={(e) =>
+                          setFormData({ ...formData, phoneNumber: e.target.value })
+                        }
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="comment">Your Comments *</Label>
+                      <Label htmlFor="idNumber">ID Number</Label>
+                      <Input
+                        id="idNumber"
+                        required
+                        value={formData.idNumber}
+                        onChange={(e) =>
+                          setFormData({ ...formData, idNumber: e.target.value })
+                        }
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="comment">Your Comments</Label>
                       <Textarea
                         id="comment"
                         required
                         value={formData.comment}
-                        onChange={(e) => setFormData({ ...formData, comment: e.target.value })}
-                        placeholder="Share your thoughts on this bill"
-                        className="min-h-[100px]"
+                        onChange={(e) =>
+                          setFormData({ ...formData, comment: e.target.value })
+                        }
                       />
                     </div>
-                    <Button type="submit" className="w-full">Submit Feedback</Button>
+                    <Button type="submit" className="w-full">
+                      Submit Feedback
+                    </Button>
                   </form>
                 </DialogContent>
               </Dialog>
-            </div>
-          </Card>
-        ))
+            </Card>
+          ))}
+        </div>
       )}
     </div>
   );

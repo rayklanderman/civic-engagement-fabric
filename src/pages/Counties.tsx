@@ -10,8 +10,8 @@ export function Counties() {
 
   const handleCountySelect = (county: County) => {
     setSelectedCounty(county);
-    // Navigate to the bills page with the county ID
-    navigate(`/bills/${county.id}`);
+    // Navigate to bills page with county name
+    navigate(`/bills/${encodeURIComponent(county.name.toLowerCase())}`);
   };
 
   return (

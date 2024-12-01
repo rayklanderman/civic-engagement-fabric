@@ -13,9 +13,11 @@ import { kenyaCountiesGeoJSON } from '@/lib/counties';
 export function Bills() {
   const { countyId } = useParams();
   
-  // Find the selected county if countyId is provided
-  const selectedCounty = countyId 
-    ? kenyaCountiesGeoJSON.features.find(county => county.properties.id === countyId)?.properties
+  // Decode and format county name for display
+  const countyName = countyId 
+    ? decodeURIComponent(countyId).split('-').map(word => 
+        word.charAt(0).toUpperCase() + word.slice(1)
+      ).join(' ')
     : null;
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -41,7 +43,7 @@ export function Bills() {
       bill.description.toLowerCase().includes(searchTerm.toLowerCase());
     
     if (filter === "all") return matchesSearch;
-    return matchesSearch && bill.type === filter;
+    return matchesSearch && bill.status === filter;
   });
 
   return (
@@ -49,7 +51,7 @@ export function Bills() {
       <main className="flex-1 container mx-auto px-4 py-8">
         <div className="flex flex-col md:flex-row justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-[#BB0000] mb-4 md:mb-0">
-            {selectedCounty ? `Bills for ${selectedCounty.name} County` : 'Legislative Bills'}
+            {countyName ? `Bills for ${countyName} County` : 'Legislative Bills'}
           </h1>
           <div className="flex gap-4 w-full md:w-auto">
             <Input
@@ -65,8 +67,9 @@ export function Bills() {
               className="w-40"
             >
               <option value="all">All Bills</option>
-              <option value="national">National</option>
-              <option value="county">County</option>
+              <option value="active">Active</option>
+              <option value="pending">Pending</option>
+              <option value="closed">Closed</option>
             </Select>
           </div>
         </div>
@@ -82,7 +85,12 @@ export function Bills() {
             <p className="text-gray-500">No bills found matching your criteria.</p>
           </div>
         ) : (
-          <BillsList bills={filteredBills} countyId={countyId} />
+          <BillsList 
+            bills={filteredBills} 
+            countyName={countyName} 
+            searchTerm={searchTerm}
+            filter={filter}
+          />
         )}
       </main>
     </div>
