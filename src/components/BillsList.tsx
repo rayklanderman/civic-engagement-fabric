@@ -109,7 +109,7 @@ export function BillsList({ countyName, searchTerm, filter }: BillsListProps) {
     
     return bills.filter(bill => {
       // County filter
-      if (countyName) {
+      if (countyName && bill.county) {
         const normalizedCountyName = countyName.toLowerCase();
         const normalizedBillCounty = bill.county.toLowerCase();
         if (!bill.isNational && normalizedBillCounty !== normalizedCountyName) {
@@ -120,8 +120,9 @@ export function BillsList({ countyName, searchTerm, filter }: BillsListProps) {
       // Search term filter
       if (searchTerm) {
         const normalizedSearch = searchTerm.toLowerCase();
-        if (!bill.title.toLowerCase().includes(normalizedSearch) &&
-            !bill.description.toLowerCase().includes(normalizedSearch)) {
+        const titleMatch = bill.title?.toLowerCase().includes(normalizedSearch) || false;
+        const descriptionMatch = bill.description?.toLowerCase().includes(normalizedSearch) || false;
+        if (!titleMatch && !descriptionMatch) {
           return false;
         }
       }

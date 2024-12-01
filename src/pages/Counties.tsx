@@ -45,15 +45,15 @@ export function Counties() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div>
               <h3 className="font-semibold mb-2">Population</h3>
-              <p>{selectedCounty.population.toLocaleString()}</p>
+              <p>{selectedCounty.population?.toLocaleString() ?? 'Not available'}</p>
             </div>
             <div>
               <h3 className="font-semibold mb-2">Capital</h3>
-              <p>{selectedCounty.capital}</p>
+              <p>{selectedCounty.capital ?? 'Not available'}</p>
             </div>
             <div>
               <h3 className="font-semibold mb-2">Area</h3>
-              <p>{selectedCounty.area.toLocaleString()} km²</p>
+              <p>{selectedCounty.area?.toLocaleString() ?? 'Not available'} km²</p>
             </div>
           </div>
         </div>
