@@ -11,48 +11,48 @@ const Statistics = lazy(() => import('./pages/Statistics').then(m => ({ default:
 const NotFound = lazy(() => import('./pages/NotFound').then(m => ({ default: m.NotFound })));
 
 // Wrap components with Suspense
-const withSuspense = (Component: React.ComponentType) => (
+const withSuspense = (Component: React.ComponentType) => (props: any) => (
   <Suspense fallback={<Loading />}>
-    <Component />
+    <Component {...props} />
   </Suspense>
 );
 
-// Define routes with proper configuration
+// Define routes
 export const routes: RouteObject[] = [
   {
     path: "/",
     element: <Layout />,
-    errorElement: withSuspense(NotFound),
+    errorElement: <NotFound />,
     children: [
       {
         index: true,
-        element: withSuspense(LandingPage),
+        element: withSuspense(LandingPage)({})
       },
       {
         path: "counties",
-        element: withSuspense(Counties),
+        element: withSuspense(Counties)({})
       },
       {
         path: "bills",
         children: [
           {
             index: true,
-            element: withSuspense(Bills),
+            element: withSuspense(Bills)({})
           },
           {
             path: "national",
-            element: withSuspense(Bills),
+            element: withSuspense(Bills)({})
           }
         ]
       },
       {
         path: "statistics",
-        element: withSuspense(Statistics),
+        element: withSuspense(Statistics)({})
       },
       {
         path: "*",
-        element: withSuspense(NotFound),
+        element: <NotFound />
       }
-    ],
-  },
+    ]
+  }
 ];

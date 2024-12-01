@@ -1,22 +1,18 @@
 import React, { Suspense } from 'react'
 import { createRoot } from 'react-dom/client'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import App from './App'
-import './styles/global.css'
+import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import { routes } from './routes'
 import { Loading } from './components/Loading'
-import { 
-  createBrowserRouter,
-  RouterProvider,
-  Future
-} from 'react-router-dom';
+import './styles/global.css'
 
-// Configure QueryClient with retries and caching
+// Configure QueryClient
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: 1,
       refetchOnWindowFocus: false,
-      staleTime: 5 * 60 * 1000, // 5 minutes
+      staleTime: 5 * 60 * 1000,
       suspense: true,
     },
     mutations: {
@@ -25,26 +21,20 @@ const queryClient = new QueryClient({
   },
 })
 
-// Get root element and validate
-const root = document.getElementById('root')
-if (!root) throw new Error('Root element not found')
-
-const routes = [
-  {
-    path: '/',
-    element: <App />,
-  },
-];
-
 const router = createBrowserRouter(routes, {
   future: {
     v7_startTransition: true,
+    v7_normalizeFormMethod: true,
     v7_partialHydration: true,
+    v7_relativeSplatPath: true,
+    v7_fetcherPersist: true,
     v7_skipActionErrorRevalidation: true
   }
-});
+})
 
-// Render app with error boundaries and suspense
+const root = document.getElementById('root')
+if (!root) throw new Error('Root element not found')
+
 createRoot(root).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
