@@ -4,14 +4,14 @@ import { supabase } from "@/lib/supabase";
 import { Bill } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BillsList } from "@/components/BillsList";
 import { useParams } from 'react-router-dom';
 import { kenyaCountiesGeoJSON } from '@/lib/counties';
 
 export function Bills() {
-  const { countyId } = useParams();
+  const { countyId } = useParams<{ countyId?: string }>();
   
   // Decode and format county name for display
   const countyName = countyId 
@@ -51,7 +51,7 @@ export function Bills() {
       <main className="flex-1 container mx-auto px-4 py-8">
         <div className="flex flex-col md:flex-row justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-[#BB0000] mb-4 md:mb-0">
-            {countyName ? `Bills for ${countyName} County` : 'Legislative Bills'}
+            {countyName ? `Bills for ${countyName} County` : 'National Bills'}
           </h1>
           <div className="flex gap-4 w-full md:w-auto">
             <Input
@@ -66,10 +66,15 @@ export function Bills() {
               onValueChange={setFilter}
               className="w-40"
             >
-              <option value="all">All Bills</option>
-              <option value="active">Active</option>
-              <option value="pending">Pending</option>
-              <option value="closed">Closed</option>
+              <SelectTrigger className="md:w-48">
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Bills</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="closed">Closed</SelectItem>
+              </SelectContent>
             </Select>
           </div>
         </div>

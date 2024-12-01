@@ -10,27 +10,13 @@ import './styles/global.css'
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: 1,
+      staleTime: 1000 * 60 * 5, // 5 minutes
       refetchOnWindowFocus: false,
-      staleTime: 5 * 60 * 1000,
-      suspense: true,
-    },
-    mutations: {
-      retry: 1,
     },
   },
 })
 
-const router = createBrowserRouter(routes, {
-  future: {
-    v7_startTransition: true,
-    v7_normalizeFormMethod: true,
-    v7_partialHydration: true,
-    v7_relativeSplatPath: true,
-    v7_fetcherPersist: true,
-    v7_skipActionErrorRevalidation: true
-  }
-})
+const router = createBrowserRouter(routes)
 
 const root = document.getElementById('root')
 if (!root) throw new Error('Root element not found')
@@ -39,7 +25,12 @@ createRoot(root).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
       <Suspense fallback={<Loading />}>
-        <RouterProvider router={router} />
+        <RouterProvider 
+          router={router} 
+          future={{ 
+            v7_startTransition: true 
+          }} 
+        />
       </Suspense>
     </QueryClientProvider>
   </React.StrictMode>

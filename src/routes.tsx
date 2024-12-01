@@ -1,7 +1,8 @@
-import { RouteObject } from 'react-router-dom';
+import { createBrowserRouter, RouteObject } from 'react-router-dom';
 import { lazy, Suspense } from 'react';
 import { Loading } from '@/components/Loading';
 import { Layout } from "@/components/Layout";
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 // Lazy load components
 const LandingPage = lazy(() => import('./pages/LandingPage').then(m => ({ default: m.LandingPage })));
@@ -22,7 +23,7 @@ export const routes: RouteObject[] = [
   {
     path: "/",
     element: <Layout />,
-    errorElement: <NotFound />,
+    errorElement: <ErrorBoundary />,
     children: [
       {
         index: true,
@@ -42,10 +43,6 @@ export const routes: RouteObject[] = [
           {
             path: ":countyId",
             element: withSuspense(Bills)({})
-          },
-          {
-            path: "national",
-            element: withSuspense(Bills)({})
           }
         ]
       },
@@ -60,3 +57,5 @@ export const routes: RouteObject[] = [
     ]
   }
 ];
+
+export const router = createBrowserRouter(routes);
