@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { toast } from "react-hot-toast"
-import { submitBillVote, submitContactForm, getBills } from "@/api/bills"
+import { submitBillVote, getBills } from "@/api/bills"
 import { useQuery } from "@tanstack/react-query"
 import { useState } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog"
@@ -38,26 +38,17 @@ export function BillsList({ countyId, countyName }: BillsListProps) {
 
     try {
       // Validate required fields
-      if (!formData.name || !formData.email || !formData.message) {
+      if (!formData.name || !formData.email || !formData.message || !formData.vote) {
         toast.error('Please fill in all required fields')
         return
       }
 
-      // Submit contact form
-      await submitContactForm({
-        name: formData.name,
-        email: formData.email,
-        message: formData.message
+      // Submit bill vote with comment
+      await submitBillVote({
+        bill_id: selectedBill.id,
+        vote: formData.vote,
+        comment: formData.message
       })
-
-      // If vote is provided, submit bill vote
-      if (selectedBill && formData.vote) {
-        await submitBillVote({
-          bill_id: selectedBill.id,
-          vote: formData.vote,
-          comment: formData.message
-        })
-      }
 
       toast.success('Thank you for your participation!')
       setIsDialogOpen(false)
@@ -68,8 +59,8 @@ export function BillsList({ countyId, countyName }: BillsListProps) {
         vote: ""
       })
     } catch (error) {
-      console.error("Error submitting form:", error)
-      toast.error('Failed to submit form. Please try again.')
+      console.error("Error submitting vote:", error)
+      toast.error('Failed to submit vote. Please try again.')
     } finally {
       setIsSubmitting(false)
     }
@@ -162,22 +153,12 @@ export function BillsList({ countyId, countyName }: BillsListProps) {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="message">Message *</Label>
-                      <Textarea
-                        id="message"
-                        required
-                        value={formData.message}
-                        onChange={(e) =>
-                          setFormData({ ...formData, message: e.target.value })
-                        }
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="vote">Vote</Label>
+                      <Label htmlFor="vote">Your Vote *</Label>
                       <select
                         id="vote"
                         className="w-full p-2 border rounded-md"
                         value={formData.vote}
+                        required
                         onChange={(e) =>
                           setFormData({ ...formData, vote: e.target.value })
                         }
@@ -187,6 +168,17 @@ export function BillsList({ countyId, countyName }: BillsListProps) {
                         <option value="no">Oppose</option>
                         <option value="undecided">Undecided</option>
                       </select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="message">Your Comments *</Label>
+                      <Textarea
+                        id="message"
+                        required
+                        value={formData.message}
+                        onChange={(e) =>
+                          setFormData({ ...formData, message: e.target.value })
+                        }
+                      />
                     </div>
                     <Button
                       type="submit"
