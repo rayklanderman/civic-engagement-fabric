@@ -45,22 +45,27 @@ export async function getBillAnalytics(billId: string) {
 }
 
 export async function getBills(type: 'national' | 'county', countyId?: string) {
-  let query = supabase
-    .from('bills')
-    .select('*')
-    .eq('type', type)
+  try {
+    let query = supabase
+      .from('bills')
+      .select('*')
+      .eq('type', type)
 
-  if (type === 'county' && countyId) {
-    query = query.eq('county_id', countyId)
-  }
+    if (type === 'county' && countyId) {
+      query = query.eq('county_id', countyId)
+    }
 
-  const { data, error } = await query
+    const { data, error } = await query
 
-  if (error) {
+    if (error) {
+      throw error
+    }
+
+    return data
+  } catch (error) {
+    console.error('Error fetching bills:', error)
     throw error
   }
-
-  return data
 }
 
 interface BillParticipation {
@@ -72,6 +77,25 @@ interface BillParticipation {
   comment: string
 }
 
+// First check if the table exists
+async function checkTable() {
+  try {
+    const { data, error } = await supabase
+      .from('citizen_participation')  // Try this table name
+      .select('*')
+      .limit(1)
+
+    if (error) {
+      console.error('Table check error:', error)
+      return false
+    }
+    return true
+  } catch (error) {
+    console.error('Table check failed:', error)
+    return false
+  }
+}
+
 export async function submitBillParticipation(participationData: {
   billId: string
   name: string
@@ -81,6 +105,11 @@ export async function submitBillParticipation(participationData: {
   comment: string
 }) {
   try {
+    const tableExists = await checkTable()
+    if (!tableExists) {
+      throw new Error('Database table not found. Please check your database setup.')
+    }
+
     const formattedData: BillParticipation = {
       bill_id: participationData.billId,
       name: participationData.name,
@@ -91,7 +120,7 @@ export async function submitBillParticipation(participationData: {
     }
 
     const { data, error } = await supabase
-      .from('bill_submissions')  
+      .from('citizen_participation')  // Try this table name
       .insert([formattedData])
       .select()
 
