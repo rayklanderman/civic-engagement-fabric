@@ -63,6 +63,15 @@ export async function getBills(type: 'national' | 'county', countyId?: string) {
   return data
 }
 
+interface BillParticipation {
+  bill_id: string
+  name: string
+  email: string
+  phone_number: string
+  id_number: string
+  comment: string
+}
+
 export async function submitBillParticipation(participationData: {
   billId: string
   name: string
@@ -72,19 +81,18 @@ export async function submitBillParticipation(participationData: {
   comment: string
 }) {
   try {
+    const formattedData: BillParticipation = {
+      bill_id: participationData.billId,
+      name: participationData.name,
+      email: participationData.email,
+      phone_number: participationData.phoneNumber,
+      id_number: participationData.idNumber,
+      comment: participationData.comment
+    }
+
     const { data, error } = await supabase
-      .from('public_participation')  
-      .insert([
-        {
-          bill_id: participationData.billId,
-          name: participationData.name,
-          email: participationData.email,
-          phone_number: participationData.phoneNumber,
-          id_number: participationData.idNumber,
-          comment: participationData.comment,
-          created_at: new Date().toISOString(),
-        },
-      ])
+      .from('bill_submissions')  
+      .insert([formattedData])
       .select()
 
     if (error) {
@@ -94,7 +102,7 @@ export async function submitBillParticipation(participationData: {
 
     return data
   } catch (error) {
-    console.error('Supabase error:', error)
+    console.error('Error submitting participation:', error)
     throw error
   }
 }
