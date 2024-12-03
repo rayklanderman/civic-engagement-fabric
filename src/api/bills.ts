@@ -71,20 +71,30 @@ export async function submitBillParticipation(participationData: {
   idNumber: string
   comment: string
 }) {
-  const { data, error } = await supabase
-    .from('bill_participation')  
-    .insert([
-      {
-        ...participationData,
-        created_at: new Date().toISOString(),
-      },
-    ])
-    .select()
+  try {
+    const { data, error } = await supabase
+      .from('public_participation')  
+      .insert([
+        {
+          bill_id: participationData.billId,
+          name: participationData.name,
+          email: participationData.email,
+          phone_number: participationData.phoneNumber,
+          id_number: participationData.idNumber,
+          comment: participationData.comment,
+          created_at: new Date().toISOString(),
+        },
+      ])
+      .select()
 
-  if (error) {
+    if (error) {
+      console.error('Supabase error:', error)
+      throw error
+    }
+
+    return data
+  } catch (error) {
     console.error('Supabase error:', error)
     throw error
   }
-
-  return data
 }
