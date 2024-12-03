@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import { submitBillParticipation } from "@/api/bills";
+import { submitBillVote, submitBillParticipation } from "@/api/bills";
 import { useQuery } from "@tanstack/react-query";
 import { useState, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
@@ -25,6 +25,7 @@ interface ParticipationFormData {
   phoneNumber: string;
   idNumber: string;
   comment: string;
+  vote?: string;
 }
 
 interface BillsListProps {
@@ -96,6 +97,7 @@ export function BillsList({ countyName, searchTerm, filter }: BillsListProps) {
     phoneNumber: "",
     idNumber: "",
     comment: "",
+    vote: ""
   });
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -164,11 +166,21 @@ export function BillsList({ countyName, searchTerm, filter }: BillsListProps) {
 
     setIsSubmitting(true);
     try {
+      // Submit contact form
       await submitBillParticipation({
         billId: selectedBill.id,
         ...formData,
       });
-      
+
+      // If vote is provided, submit bill vote
+      if (formData.vote) {
+        await submitBillVote({
+          bill_id: selectedBill.id,
+          vote: formData.vote,
+          comment: formData.comment
+        });
+      }
+
       toast({
         title: "Participation Submitted",
         description: "Thank you for participating in the legislative process. Your input has been recorded.",
@@ -181,6 +193,7 @@ export function BillsList({ countyName, searchTerm, filter }: BillsListProps) {
         phoneNumber: "",
         idNumber: "",
         comment: "",
+        vote: ""
       });
     } catch (error) {
       console.error("Error submitting participation:", error);
@@ -326,6 +339,21 @@ export function BillsList({ countyName, searchTerm, filter }: BillsListProps) {
                           setFormData({ ...formData, comment: e.target.value })
                         }
                       />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="vote">Vote</Label>
+                      <select
+                        id="vote"
+                        value={formData.vote}
+                        onChange={(e) =>
+                          setFormData({ ...formData, vote: e.target.value })
+                        }
+                      >
+                        <option value="">Select your vote</option>
+                        <option value="yes">Support</option>
+                        <option value="no">Oppose</option>
+                        <option value="undecided">Undecided</option>
+                      </select>
                     </div>
                     <Button
                       type="submit"
