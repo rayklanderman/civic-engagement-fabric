@@ -1,6 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
+import { submitBillParticipation } from "@/api/bills";
 import { useQuery } from "@tanstack/react-query";
 import { useState, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
@@ -97,6 +98,7 @@ export function BillsList({ countyName, searchTerm, filter }: BillsListProps) {
     comment: "",
   });
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { data: bills = [], isLoading, isError } = useQuery<Bill[]>({
     queryKey: ['bills'],
@@ -143,21 +145,53 @@ export function BillsList({ countyName, searchTerm, filter }: BillsListProps) {
     setIsDialogOpen(true);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Submission data:", { billId: selectedBill?.id, ...formData });
-    toast({
-      title: "Feedback Submitted",
-      description: "Thank you for participating in the bill review process.",
-    });
-    setIsDialogOpen(false);
-    setFormData({
-      name: "",
-      email: "",
-      phoneNumber: "",
-      idNumber: "",
-      comment: "",
-    });
+    if (!selectedBill) return;
+
+    // Validate required fields
+    const requiredFields = ['name', 'email', 'phoneNumber', 'idNumber'] as const;
+    const missingFields = requiredFields.filter(field => !formData[field]);
+    
+    if (missingFields.length > 0) {
+      toast({
+        title: "Missing Information",
+        description: `Please fill in the following fields: ${missingFields.join(', ')}`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await submitBillParticipation({
+        billId: selectedBill.id,
+        ...formData,
+      });
+      
+      toast({
+        title: "Participation Submitted",
+        description: "Thank you for participating in the legislative process. Your input has been recorded.",
+      });
+      
+      setIsDialogOpen(false);
+      setFormData({
+        name: "",
+        email: "",
+        phoneNumber: "",
+        idNumber: "",
+        comment: "",
+      });
+    } catch (error) {
+      console.error("Error submitting participation:", error);
+      toast({
+        title: "Error",
+        description: "There was an error submitting your participation. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (isLoading) {
@@ -293,8 +327,12 @@ export function BillsList({ countyName, searchTerm, filter }: BillsListProps) {
                         }
                       />
                     </div>
-                    <Button type="submit" className="w-full">
-                      Submit Feedback
+                    <Button
+                      type="submit"
+                      className="w-full"
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? "Submitting..." : "Submit Feedback"}
                     </Button>
                   </form>
                 </DialogContent>

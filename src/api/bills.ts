@@ -62,3 +62,27 @@ export async function getBills(type: 'national' | 'county', countyId?: string) {
 
   return data
 }
+
+export async function submitBillParticipation(participationData: {
+  billId: string
+  name: string
+  email: string
+  phoneNumber: string
+  idNumber: string
+  comment: string
+}) {
+  const { data, error } = await supabase
+    .from('bill_participations')
+    .insert([
+      {
+        ...participationData,
+        created_at: new Date().toISOString(),
+      },
+    ])
+
+  if (error) {
+    throw error
+  }
+
+  return data
+}
