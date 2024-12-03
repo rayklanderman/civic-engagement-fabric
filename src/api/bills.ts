@@ -69,11 +69,11 @@ export async function getBills(type: 'national' | 'county', countyId?: string) {
 }
 
 interface ContactSubmission {
-  bill_id: string
+  billId: string
   name: string
   email: string
-  phone_number: string
-  id_number: string
+  phoneNumber: string
+  idNumber: string
   comment: string
   created_at?: string
 }
@@ -88,11 +88,11 @@ export async function submitBillParticipation(participationData: {
 }) {
   try {
     const formattedData: ContactSubmission = {
-      bill_id: participationData.billId,
+      billId: participationData.billId,
       name: participationData.name,
       email: participationData.email,
-      phone_number: participationData.phoneNumber,
-      id_number: participationData.idNumber,
+      phoneNumber: participationData.phoneNumber,
+      idNumber: participationData.idNumber,
       comment: participationData.comment,
       created_at: new Date().toISOString()
     }
@@ -122,7 +122,7 @@ export async function getBillSubmissions(billId: string) {
     const { data, error } = await supabase
       .from('contact_submissions')
       .select('*')
-      .eq('bill_id', billId)
+      .eq('billId', billId)
 
     if (error) {
       console.error('Error fetching submissions:', error)
