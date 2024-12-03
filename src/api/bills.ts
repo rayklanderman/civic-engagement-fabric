@@ -72,15 +72,17 @@ export async function submitBillParticipation(participationData: {
   comment: string
 }) {
   const { data, error } = await supabase
-    .from('bill_participations')
+    .from('bill_participation')  
     .insert([
       {
         ...participationData,
         created_at: new Date().toISOString(),
       },
     ])
+    .select()
 
   if (error) {
+    console.error('Supabase error:', error)
     throw error
   }
 

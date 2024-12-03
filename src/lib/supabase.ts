@@ -7,11 +7,8 @@ console.log('Environment variables:', {
   HAS_ANON_KEY: !!import.meta.env.VITE_SUPABASE_ANON_KEY
 })
 
-// Ensure URLs are properly formatted with protocol
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL?.trim()
-  ? `https://${import.meta.env.VITE_SUPABASE_URL?.trim().replace(/^https?:\/\//, '')}`
-  : ''
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY?.trim() || ''
+const supabaseUrl = `https://${import.meta.env.VITE_SUPABASE_URL}`
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
 if (!supabaseUrl || !supabaseAnonKey) {
   console.error('Missing Supabase environment variables:', { supabaseUrl, hasAnonKey: !!supabaseAnonKey })
