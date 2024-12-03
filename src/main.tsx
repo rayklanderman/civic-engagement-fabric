@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import { routes } from './routes'
 import { Loading } from './components/Loading'
+import { Toaster } from 'react-hot-toast'
 import './styles/global.css'
 
 // Configure QueryClient
@@ -35,6 +36,26 @@ createRoot(root).render(
       <Suspense fallback={<Loading />}>
         <RouterProvider 
           router={router} 
+        />
+        <Toaster 
+          position="top-right"
+          toastOptions={{
+            duration: 3000,
+            style: {
+              background: '#333',
+              color: '#fff',
+            },
+            success: {
+              style: {
+                background: 'green',
+              },
+            },
+            error: {
+              style: {
+                background: 'red',
+              },
+            },
+          }}
         />
       </Suspense>
     </QueryClientProvider>
