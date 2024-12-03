@@ -47,17 +47,20 @@ export async function submitBillVote(data: BillVote) {
       throw new Error('Missing required fields')
     }
 
+    // Get current user if available
+    const { data: { user } } = await supabase.auth.getUser()
+    
     const { error } = await supabase
       .from('bill_votes')
       .insert([{
         bill_id: data.bill_id,
-        user_id: data.user_id,
+        user_id: user?.id || '00000000-0000-0000-0000-000000000000', // Use a default UUID for anonymous users
         vote: data.vote,
         comment: data.comment
       }])
 
     if (error) {
-      toast.error('Failed to submit bill vote')
+      toast.error('Failed to submit vote')
       throw error
     }
 
