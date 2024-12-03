@@ -68,32 +68,14 @@ export async function getBills(type: 'national' | 'county', countyId?: string) {
   }
 }
 
-interface BillParticipation {
+interface ContactSubmission {
   bill_id: string
   name: string
   email: string
   phone_number: string
   id_number: string
   comment: string
-}
-
-// First check if the table exists
-async function checkTable() {
-  try {
-    const { data, error } = await supabase
-      .from('citizen_participation')  // Try this table name
-      .select('*')
-      .limit(1)
-
-    if (error) {
-      console.error('Table check error:', error)
-      return false
-    }
-    return true
-  } catch (error) {
-    console.error('Table check failed:', error)
-    return false
-  }
+  created_at?: string
 }
 
 export async function submitBillParticipation(participationData: {
@@ -105,22 +87,20 @@ export async function submitBillParticipation(participationData: {
   comment: string
 }) {
   try {
-    const tableExists = await checkTable()
-    if (!tableExists) {
-      throw new Error('Database table not found. Please check your database setup.')
-    }
-
-    const formattedData: BillParticipation = {
+    const formattedData: ContactSubmission = {
       bill_id: participationData.billId,
       name: participationData.name,
       email: participationData.email,
       phone_number: participationData.phoneNumber,
       id_number: participationData.idNumber,
-      comment: participationData.comment
+      comment: participationData.comment,
+      created_at: new Date().toISOString()
     }
 
+    console.log('Submitting data:', formattedData)
+
     const { data, error } = await supabase
-      .from('citizen_participation')  // Try this table name
+      .from('contact_submissions')
       .insert([formattedData])
       .select()
 
@@ -129,9 +109,29 @@ export async function submitBillParticipation(participationData: {
       throw error
     }
 
+    console.log('Submission successful:', data)
     return data
   } catch (error) {
     console.error('Error submitting participation:', error)
+    throw error
+  }
+}
+
+export async function getBillSubmissions(billId: string) {
+  try {
+    const { data, error } = await supabase
+      .from('contact_submissions')
+      .select('*')
+      .eq('bill_id', billId)
+
+    if (error) {
+      console.error('Error fetching submissions:', error)
+      throw error
+    }
+
+    return data
+  } catch (error) {
+    console.error('Error fetching submissions:', error)
     throw error
   }
 }
