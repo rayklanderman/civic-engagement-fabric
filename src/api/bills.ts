@@ -1,27 +1,125 @@
 import { supabase } from '@/lib/supabase'
+import { toast } from 'react-hot-toast'
+
+// Interfaces matching database tables
+interface ContactSubmission {
+  name: string
+  email: string
+  message: string
+}
 
 interface BillVote {
   bill_id: string
-  user_id: string
-  vote: 'yes' | 'no' | 'undecided'
-  comment?: string
+  user_id?: string
+  vote: string
+  comment: string
 }
 
-export async function submitBillVote(voteData: BillVote) {
-  const { data, error } = await supabase
-    .from('bill_votes')
-    .insert([
-      {
-        ...voteData,
-        created_at: new Date().toISOString(),
-      },
-    ])
+export async function submitContactForm(data: ContactSubmission) {
+  try {
+    const { error } = await supabase
+      .from('contact_submissions')
+      .insert([{
+        name: data.name,
+        email: data.email,
+        message: data.message,
+        created_at: new Date().toISOString()
+      }])
 
-  if (error) {
+    if (error) {
+      toast.error('Failed to submit contact form')
+      throw error
+    }
+
+    toast.success('Contact form submitted successfully!')
+    return true
+  } catch (error) {
+    console.error('Error submitting contact form:', error)
     throw error
   }
+}
 
-  return data
+export async function submitBillVote(data: BillVote) {
+  try {
+    // Validate required fields
+    if (!data.bill_id || !data.vote) {
+      toast.error('Please fill in all required fields')
+      throw new Error('Missing required fields')
+    }
+
+    const { error } = await supabase
+      .from('bill_votes')
+      .insert([{
+        bill_id: data.bill_id,
+        user_id: data.user_id,
+        vote: data.vote,
+        comment: data.comment
+      }])
+
+    if (error) {
+      toast.error('Failed to submit bill vote')
+      throw error
+    }
+
+    toast.success('Vote submitted successfully!')
+    return true
+  } catch (error) {
+    console.error('Error submitting bill vote:', error)
+    throw error
+  }
+}
+
+export async function getBills(type: 'national' | 'county', countyId?: string) {
+  try {
+    let query = supabase
+      .from('bills')
+      .select(`
+        id,
+        title,
+        description,
+        type,
+        county_id,
+        counties (
+          name,
+          region
+        )
+      `)
+      .eq('type', type)
+
+    if (type === 'county' && countyId) {
+      query = query.eq('county_id', countyId)
+    }
+
+    const { data, error } = await query
+
+    if (error) {
+      toast.error('Failed to fetch bills')
+      throw error
+    }
+
+    return data
+  } catch (error) {
+    console.error('Error fetching bills:', error)
+    throw error
+  }
+}
+
+export async function getCounties() {
+  try {
+    const { data, error } = await supabase
+      .from('counties')
+      .select('id, name, region')
+
+    if (error) {
+      toast.error('Failed to fetch counties')
+      throw error
+    }
+
+    return data
+  } catch (error) {
+    console.error('Error fetching counties:', error)
+    throw error
+  }
 }
 
 export async function getBillAnalytics(billId: string) {
@@ -42,79 +140,6 @@ export async function getBillAnalytics(billId: string) {
   }
 
   return analytics
-}
-
-export async function getBills(type: 'national' | 'county', countyId?: string) {
-  try {
-    let query = supabase
-      .from('bills')
-      .select('*')
-      .eq('type', type)
-
-    if (type === 'county' && countyId) {
-      query = query.eq('county_id', countyId)
-    }
-
-    const { data, error } = await query
-
-    if (error) {
-      throw error
-    }
-
-    return data
-  } catch (error) {
-    console.error('Error fetching bills:', error)
-    throw error
-  }
-}
-
-interface ContactSubmission {
-  billId: string
-  name: string
-  email: string
-  phoneNumber: string
-  idNumber: string
-  comment: string
-  created_at?: string
-}
-
-export async function submitBillParticipation(participationData: {
-  billId: string
-  name: string
-  email: string
-  phoneNumber: string
-  idNumber: string
-  comment: string
-}) {
-  try {
-    const formattedData: ContactSubmission = {
-      billId: participationData.billId,
-      name: participationData.name,
-      email: participationData.email,
-      phoneNumber: participationData.phoneNumber,
-      idNumber: participationData.idNumber,
-      comment: participationData.comment,
-      created_at: new Date().toISOString()
-    }
-
-    console.log('Submitting data:', formattedData)
-
-    const { data, error } = await supabase
-      .from('contact_submissions')
-      .insert([formattedData])
-      .select()
-
-    if (error) {
-      console.error('Supabase error:', error)
-      throw error
-    }
-
-    console.log('Submission successful:', data)
-    return data
-  } catch (error) {
-    console.error('Error submitting participation:', error)
-    throw error
-  }
 }
 
 export async function getBillSubmissions(billId: string) {
