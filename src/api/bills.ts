@@ -73,17 +73,7 @@ export async function getBills(type: 'national' | 'county', countyId?: string) {
   try {
     let query = supabase
       .from('bills')
-      .select(`
-        id,
-        title,
-        description,
-        type,
-        county_id,
-        counties (
-          name,
-          region
-        )
-      `)
+      .select('id, title, description, type, county_id')
       .eq('type', type)
 
     if (type === 'county' && countyId) {
