@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { toast } from "@/components/ui/use-toast";
+import toast from "react-hot-toast";
 import { submitContactForm } from "@/api/contact";
 
 export function ContactForm() {
@@ -20,18 +20,11 @@ export function ContactForm() {
     
     try {
       await submitContactForm(formData);
-      toast({
-        title: "Message Sent!",
-        description: "Thank you for your message. We'll get back to you soon.",
-      });
+      toast.success("Thank you for your message. We'll get back to you soon!");
       setFormData({ name: "", email: "", message: "" });
     } catch (error) {
       console.error("Error submitting form:", error);
-      toast({
-        title: "Error",
-        description: "There was an error sending your message. Please try again later.",
-        variant: "destructive",
-      });
+      toast.error("There was an error sending your message. Please try again later.");
     } finally {
       setIsSubmitting(false);
     }
