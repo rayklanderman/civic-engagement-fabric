@@ -39,6 +39,53 @@ To empower citizens with tools and information that facilitate active participat
 
 Visit [Civic Engagement Fabric](https://civic-engagement-fabric-one.vercel.app/) to start participating in your local government's decision-making process.
 
+## Technical Stack
+
+- **Frontend**: React with TypeScript
+- **Styling**: Tailwind CSS
+- **State Management**: [Your state management solution]
+- **Routing**: React Router
+- **Build Tool**: Vite
+- **Deployment**: Vercel
+
+### Development Setup
+
+```bash
+# Clone the repository
+git clone [your-repository-url]
+
+# Install dependencies
+npm install
+
+# Set up environment variables
+cp .env.example .env
+# Edit .env with your configuration
+
+# Start development server
+npm run dev
+
+# Build for production
+npm run build
+```
+
+### Project Structure
+
+```
+civic-engagement-fabric/
+├── src/               # Source code
+│   ├── components/    # Reusable UI components
+│   ├── pages/        # Page components
+│   ├── hooks/        # Custom React hooks
+│   ├── utils/        # Utility functions
+│   └── types/        # TypeScript type definitions
+├── public/           # Static assets
+└── ...
+```
+
+### Security
+
+For security-related matters, please refer to our [Security Policy](SECURITY.md).
+
 ## Contributing
 
 We welcome contributions to improve civic engagement in our communities. Feel free to submit issues and pull requests.
