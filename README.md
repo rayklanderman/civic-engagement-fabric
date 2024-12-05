@@ -1,11 +1,11 @@
-# Civic Engagement Fabric
+# Sauti Ya Wananchi
 
 ## Live Demo
-Visit our platform at: [Civic Engagement Fabric](https://civic-engagement-fabric-one.vercel.app/)
+Visit our platform at: [Sauti Ya Wananchi](https://civic-engagement-fabric-one.vercel.app/)
 
 ## About The Project
 
-Civic Engagement Fabric is a revolutionary platform designed to strengthen the connection between citizens and their local government. In an era where public participation is crucial for democratic processes, our platform serves as a vital bridge that enables meaningful civic engagement and community involvement.
+Sauti Ya Wananchi is a revolutionary platform designed to strengthen the connection between citizens and their local government. In an era where public participation is crucial for democratic processes, our platform serves as a vital bridge that enables meaningful civic engagement and community involvement.
 
 ### Our Mission
 
@@ -37,16 +37,7 @@ To empower citizens with tools and information that facilitate active participat
 
 ## Getting Started
 
-Visit [Civic Engagement Fabric](https://civic-engagement-fabric-one.vercel.app/) to start participating in your local government's decision-making process.
-
-## Technical Stack
-
-- **Frontend**: React with TypeScript
-- **Styling**: Tailwind CSS
-- **State Management**: [Your state management solution]
-- **Routing**: React Router
-- **Build Tool**: Vite
-- **Deployment**: Vercel
+Visit [Sauti Ya Wananchi](https://civic-engagement-fabric-one.vercel.app/) to start participating in your local government's decision-making process.
 
 ### Development Setup
 
@@ -66,20 +57,6 @@ npm run dev
 
 # Build for production
 npm run build
-```
-
-### Project Structure
-
-```
-civic-engagement-fabric/
-├── src/               # Source code
-│   ├── components/    # Reusable UI components
-│   ├── pages/        # Page components
-│   ├── hooks/        # Custom React hooks
-│   ├── utils/        # Utility functions
-│   └── types/        # TypeScript type definitions
-├── public/           # Static assets
-└── ...
 ```
 
 ### Security
